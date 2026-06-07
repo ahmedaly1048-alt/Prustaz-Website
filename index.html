@@ -1,0 +1,1792 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, user-scalable=yes"
+    />
+    <title>Prustaz | Agentic AI Workforce Platform</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['"DM Sans"', "sans-serif"],
+            },
+            colors: {
+              mint: "#61ffa6",
+              "mint-hover": "#4ade80",
+            },
+            keyframes: {
+              masterWipeLoop: {
+                "0%": { transform: "translateX(-100%)" },
+                "20%, 45%": { transform: "translateX(0%)" },
+                "65%, 100%": { transform: "translateX(100%)" },
+              },
+              slideDown: {
+                from: { opacity: "0", transform: "translateY(-10px)" },
+                to: { opacity: "1", transform: "translateY(0)" },
+              },
+            },
+            animation: {
+              "wipe-1":
+                "masterWipeLoop 4s cubic-bezier(0.86,0,0.07,1) infinite 0s",
+              "wipe-2":
+                "masterWipeLoop 4s cubic-bezier(0.86,0,0.07,1) infinite 0.15s",
+              "wipe-3":
+                "masterWipeLoop 4s cubic-bezier(0.86,0,0.07,1) infinite 0.3s",
+              "wipe-4":
+                "masterWipeLoop 4s cubic-bezier(0.86,0,0.07,1) infinite 0.45s",
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      /* Critical animations & hover behaviors */
+      .dr-stripe-layer {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        transform: translateX(-100%);
+        animation: masterWipeLoop 4s cubic-bezier(0.86, 0, 0.07, 1) infinite;
+      }
+      .block-black-1 {
+        background-color: #000000;
+        z-index: 1;
+        animation-delay: 0s;
+      }
+      .block-mint-1 {
+        background-color: #61ffa6;
+        z-index: 2;
+        animation-delay: 0.15s;
+      }
+      .block-black-2 {
+        background-color: #000000;
+        z-index: 3;
+        animation-delay: 0.3s;
+      }
+      .block-mint-2 {
+        background-color: #61ffa6;
+        z-index: 4;
+        animation-delay: 0.45s;
+      }
+      @keyframes masterWipeLoop {
+        0% {
+          transform: translateX(-100%);
+        }
+        20%,
+        45% {
+          transform: translateX(0%);
+        }
+        65%,
+        100% {
+          transform: translateX(100%);
+        }
+      }
+
+      /* Fixed megamenu system */
+      .dr-nav-item {
+        position: static;
+      }
+      .dr-megamenu-panel {
+        position: absolute;
+        top: 76px;
+        left: 0;
+        width: 100%;
+        background-color: #ffffff;
+        box-shadow:
+          0 10px 15px -3px rgba(0, 0, 0, 0.05),
+          0 4px 6px -4px rgba(0, 0, 0, 0.02);
+        border-bottom: 1px solid #f3f4f6;
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(4px);
+        transition:
+          opacity 0.2s ease,
+          transform 0.2s ease,
+          visibility 0.2s;
+        pointer-events: none;
+        z-index: 999;
+      }
+      .dr-nav-item:hover .dr-megamenu-panel {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
+        pointer-events: auto;
+      }
+
+      /* Active nav underline */
+      .dr-nav-item.active .dr-nav-link::after {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 2px;
+        background-color: #61ffa6;
+      }
+
+      /* Matrix card bottom border animation */
+      .dr-matrix-card {
+        position: relative;
+        cursor: pointer;
+      }
+      .dr-matrix-card::after {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 0;
+        height: 4px;
+        background-color: #4ade80;
+        transition: width 0.35s cubic-bezier(0.25, 1, 0.5, 1);
+        border-radius: 0 0 4px 4px;
+      }
+      .dr-matrix-card:hover::after {
+        width: 100%;
+      }
+
+      /* CTA button sweep */
+      .btn-cta-dark {
+        position: relative;
+        overflow: hidden;
+        transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      .btn-cta-dark::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: #22252a;
+        transform: translateY(100%);
+        transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        z-index: 1;
+      }
+      .btn-cta-dark:hover::before {
+        transform: translateY(0);
+      }
+      .btn-cta-dark:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(12, 13, 14, 0.15);
+      }
+      .btn-cta-dark .btn-text {
+        position: relative;
+        z-index: 2;
+      }
+
+      /* Mobile overlay */
+      .dr-mobile-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100vh;
+        background: #fff;
+        z-index: 10000;
+        transform: translateX(100%);
+        transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        overflow-y: auto;
+        visibility: hidden;
+      }
+      .dr-mobile-overlay.active {
+        transform: translateX(0);
+        visibility: visible;
+      }
+      .dr-mobile-nav-item.open .dr-mobile-megamenu {
+        display: block;
+        animation: slideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      @keyframes slideDown {
+        from {
+          opacity: 0;
+          transform: translateY(-10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* Desktop nav visibility */
+      @media (max-width: 1024px) {
+        .dr-nav-menu-desktop {
+          display: none !important;
+        }
+        .dr-icon-btn,
+        .dr-btn-secondary-nav {
+          display: none !important;
+        }
+        .dr-menu-toggle {
+          display: flex !important;
+        }
+      }
+      @media (min-width: 1025px) {
+        .dr-menu-toggle {
+          display: none !important;
+        }
+      }
+
+      /* Card animations */
+      .recognition-card {
+        transition:
+          transform 0.25s ease,
+          box-shadow 0.25s ease;
+      }
+      .recognition-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.06);
+      }
+      .case-study-visual-card {
+        transition:
+          transform 0.25s ease,
+          box-shadow 0.25s ease;
+      }
+      .case-study-visual-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 16px 32px rgba(0, 0, 0, 0.25);
+      }
+      .simulated-asset-img {
+        transition: transform 0.3s ease;
+      }
+      .case-study-visual-card:hover .simulated-asset-img {
+        transform: scale(1.03);
+      }
+
+      /* Mock chart styles */
+      .mock-chart {
+        position: relative;
+        height: 160px;
+        border-left: 1px dashed #333;
+        border-bottom: 1px dashed #333;
+      }
+
+      /* FULLY RESPONSIVE PHASE CARDS */
+      .phase-card-inner {
+        display: flex;
+        flex-direction: row;
+        gap: 2rem;
+        align-items: center;
+        transition: all 0.3s ease;
+      }
+
+      @media (max-width: 1024px) {
+        .phase-card-inner {
+          gap: 1.5rem;
+        }
+      }
+
+      @media (max-width: 900px) {
+        .phase-card-inner {
+          flex-direction: column !important;
+          gap: 2rem;
+        }
+        .phase-card-inner .flex-1 {
+          width: 100%;
+        }
+        .phase-card-inner .flex-1:last-child {
+          display: flex;
+          justify-content: center;
+        }
+      }
+
+      @media (max-width: 640px) {
+        .phase-card-inner {
+          padding: 1.5rem !important;
+        }
+        .phase-card-inner h3 {
+          font-size: 1.5rem !important;
+        }
+        .phase-card-inner h4 {
+          font-size: 0.9rem !important;
+        }
+        .phase-card-inner ul li p {
+          font-size: 0.8rem !important;
+        }
+      }
+
+      /* Chart responsive scaling */
+      @media (max-width: 640px) {
+        .mock-chart {
+          height: 120px;
+        }
+        .mock-chart svg {
+          transform: scale(0.9);
+        }
+        .mock-chart .absolute.bottom-\[-20px\] {
+          font-size: 6px !important;
+          bottom: -16px !important;
+        }
+        .mock-chart .absolute.left-\[-25px\] {
+          left: -18px !important;
+          font-size: 6px !important;
+        }
+      }
+
+      /* Agent gallery grid responsive */
+      @media (max-width: 480px) {
+        .grid-cols-\[2fr\2c 1fr\2c 1fr\] {
+          grid-template-columns: 1fr 0.8fr 0.8fr !important;
+          gap: 0.5rem;
+          font-size: 9px;
+        }
+        .agent-gallery-text {
+          font-size: 9px;
+        }
+      }
+    </style>
+  </head>
+  <body class="font-sans bg-white text-black antialiased">
+    <!-- NAVBAR (fully preserved) -->
+    <nav
+      class="flex items-center justify-between bg-white px-4 sm:px-8 h-[76px] sticky top-0 z-[1000] border-b border-gray-100"
+    >
+      <div class="flex items-center gap-2.5 cursor-pointer select-none">
+        <img
+          src="/Prustaz_logo_dark.png"
+          alt="Logo"
+          class="h-[50px] sm:h-[60px] w-auto object-contain block"
+        />
+      </div>
+
+      <!-- Desktop Nav Menu -->
+      <ul
+        class="dr-nav-menu-desktop flex items-center list-none gap-4 lg:gap-6 h-full"
+      >
+        <li class="dr-nav-item active flex items-center h-full">
+          <a
+            href="#"
+            class="dr-nav-link text-black text-sm font-medium h-full flex items-center relative no-underline tracking-tight px-1"
+            >Why Prustaz</a
+          >
+          <div class="dr-megamenu-panel">
+            <div
+              class="flex flex-col md:flex-row max-w-[1440px] mx-auto px-6 md:px-20 py-8 md:py-11 gap-8 md:gap-[60px]"
+            >
+              <div class="flex flex-col w-full md:w-[24%]">
+                <h3 class="text-[15px] font-semibold text-black mb-3">
+                  Why Prustaz?
+                </h3>
+                <p class="text-sm text-gray-400">
+                  Discover the benefits of automated generative and predictive
+                  AI.
+                </p>
+              </div>
+              <div class="flex flex-col md:flex-row gap-8 md:gap-[85px]">
+                <div>
+                  <span
+                    class="text-[10.5px] font-semibold text-[#babcbe] tracking-wide mb-4 block uppercase"
+                    >Discover</span
+                  >
+                  <ul class="flex flex-col gap-3">
+                    <li>
+                      <a
+                        href="#"
+                        class="text-[14px] font-medium text-black hover:text-green-400"
+                        >AI Leaders</a
+                      >
+                    </li>
+                    <li>
+                      <a
+                        href="#"
+                        class="text-[14px] font-medium text-black hover:text-green-400"
+                        >AI Practitioners</a
+                      >
+                    </li>
+                  </ul>
+                </div>
+                <div>
+                  <span
+                    class="text-[10.5px] font-semibold text-[#babcbe] tracking-wide mb-4 block uppercase"
+                    >Validation</span
+                  >
+                  <ul class="flex flex-col gap-3">
+                    <li>
+                      <a
+                        href="#"
+                        class="text-[14px] font-medium text-black hover:text-green-400"
+                        >Awards & Recognition</a
+                      >
+                    </li>
+                    <li>
+                      <a
+                        href="#"
+                        class="text-[14px] font-medium text-black hover:text-green-400"
+                        >Customers</a
+                      >
+                    </li>
+                  </ul>
+                </div>
+                <div>
+                  <span
+                    class="text-[10.5px] font-semibold text-[#babcbe] tracking-wide mb-4 block uppercase"
+                    >Enterprise AI Suite</span
+                  >
+                  <ul class="flex flex-col gap-3">
+                    <li>
+                      <a
+                        href="#"
+                        class="text-[14px] font-medium text-black hover:text-green-400"
+                        >AI Apps & Agents</a
+                      >
+                    </li>
+                    <li>
+                      <a
+                        href="#"
+                        class="text-[14px] font-medium text-black hover:text-green-400"
+                        >Agentic AI Platform</a
+                      >
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </li>
+        <li class="dr-nav-item flex items-center h-full">
+          <a
+            href="#"
+            class="dr-nav-link text-black text-sm font-medium h-full flex items-center relative no-underline tracking-tight px-1"
+            >Solutions</a
+          >
+          <div class="dr-megamenu-panel">
+            <div
+              class="flex flex-col md:flex-row max-w-[1440px] mx-auto px-6 md:px-20 py-8 md:py-11 gap-8 md:gap-[60px]"
+            >
+              <div class="w-full md:w-[24%]">
+                <h3 class="text-[15px] font-semibold">Solutions</h3>
+                <p class="text-sm text-gray-400">
+                  Explore workflows optimized for vertical industries.
+                </p>
+              </div>
+              <div class="flex flex-col md:flex-row gap-8 md:gap-[85px]">
+                <div>
+                  <span
+                    class="text-[10.5px] font-semibold text-gray-400 uppercase"
+                    >By Industry</span
+                  >
+                  <ul class="mt-3 space-y-2">
+                    <li>
+                      <a href="#" class="text-black hover:text-green-400"
+                        >Financial Services</a
+                      >
+                    </li>
+                    <li>
+                      <a href="#" class="text-black hover:text-green-400"
+                        >Healthcare</a
+                      >
+                    </li>
+                    <li>
+                      <a href="#" class="text-black hover:text-green-400"
+                        >Manufacturing</a
+                      >
+                    </li>
+                  </ul>
+                </div>
+                <div>
+                  <span
+                    class="text-[10.5px] font-semibold text-gray-400 uppercase"
+                    >By Use Case</span
+                  >
+                  <ul class="mt-3 space-y-2">
+                    <li>
+                      <a href="#" class="text-black hover:text-green-400"
+                        >Generative AI Chatbots</a
+                      >
+                    </li>
+                    <li>
+                      <a href="#" class="text-black hover:text-green-400"
+                        >Predictive Modeling</a
+                      >
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </li>
+        <li class="dr-nav-item flex items-center h-full">
+          <a
+            href="#"
+            class="dr-nav-link text-black text-sm font-medium h-full flex items-center relative no-underline tracking-tight px-1"
+            >Platform</a
+          >
+          <div class="dr-megamenu-panel">
+            <div
+              class="flex flex-col md:flex-row max-w-[1440px] mx-auto px-6 md:px-20 py-8 md:py-11 gap-8 md:gap-[60px]"
+            >
+              <div class="w-full md:w-[24%]">
+                <h3 class="font-semibold">Platform</h3>
+                <p class="text-sm text-gray-400">
+                  Lifecycle workbench for agentic automation.
+                </p>
+              </div>
+              <div class="flex flex-col md:flex-row gap-8 md:gap-[85px]">
+                <div>
+                  <span class="text-xs font-bold text-gray-400 uppercase"
+                    >Capabilities</span
+                  >
+                  <ul class="mt-3 space-y-2">
+                    <li><a href="#" class="text-black">Data Preparation</a></li>
+                    <li><a href="#" class="text-black">AutoML</a></li>
+                    <li><a href="#" class="text-black">MLOps</a></li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </li>
+        <li class="dr-nav-item flex items-center h-full">
+          <a
+            href="#"
+            class="dr-nav-link text-black text-sm font-medium h-full flex items-center relative no-underline tracking-tight px-1"
+            >Tech Partners</a
+          >
+          <div class="dr-megamenu-panel">
+            <div
+              class="flex flex-col md:flex-row max-w-[1440px] mx-auto px-6 md:px-20 py-8 md:py-11 gap-8 md:gap-[60px]"
+            >
+              <div class="w-full md:w-[24%]">
+                <h3 class="font-semibold">Tech Partners</h3>
+                <p class="text-sm text-gray-400">
+                  Native integrations with cloud leaders.
+                </p>
+              </div>
+              <div>
+                <span class="text-xs font-bold text-gray-400 uppercase"
+                  >Strategic Alignment</span
+                >
+                <ul class="mt-3 space-y-2">
+                  <li><a href="#" class="text-black">Snowflake</a></li>
+                  <li><a href="#" class="text-black">Databricks</a></li>
+                  <li><a href="#" class="text-black">AWS</a></li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </li>
+        <li class="dr-nav-item flex items-center h-full">
+          <a
+            href="#"
+            class="dr-nav-link text-black text-sm font-medium h-full flex items-center relative no-underline tracking-tight px-1"
+            >Resources</a
+          >
+          <div class="dr-megamenu-panel">
+            <div
+              class="flex flex-col md:flex-row max-w-[1440px] mx-auto px-6 md:px-20 py-8 md:py-11 gap-8 md:gap-[60px]"
+            >
+              <div>
+                <h3 class="font-semibold">Learning Center</h3>
+                <ul>
+                  <li><a href="#">Docs</a></li>
+                  <li><a href="#">Whitepapers</a></li>
+                </ul>
+              </div>
+              <div>
+                <h3 class="font-semibold">Support</h3>
+                <ul>
+                  <li><a href="#">Portal</a></li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </li>
+        <li class="dr-nav-item flex items-center h-full">
+          <a
+            href="#"
+            class="dr-nav-link text-black text-sm font-medium h-full flex items-center relative no-underline tracking-tight px-1"
+            >About</a
+          >
+          <div class="dr-megamenu-panel">
+            <div
+              class="flex flex-col md:flex-row max-w-[1440px] mx-auto px-6 md:px-20 py-8 md:py-11 gap-8"
+            >
+              <div>
+                <h3 class="font-semibold">Company</h3>
+                <ul>
+                  <li><a href="#">Leadership</a></li>
+                  <li><a href="#">Careers</a></li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </li>
+      </ul>
+
+      <div class="flex items-center gap-2 sm:gap-3">
+        <div
+          class="relative inline-block text-left dr-location-wrapper font-sans antialiased text-[#070707]"
+        >
+          <button
+            type="button"
+            class="dr-location-btn w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center bg-white transition-all duration-200 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400"
+            aria-haspopup="true"
+            aria-expanded="false"
+          >
+            <svg
+              class="w-[22px] h-[22px] text-gray-800"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <line x1="2" y1="12" x2="22" y2="12" />
+              <path
+                d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"
+              />
+            </svg>
+          </button>
+
+          <div
+            class="dr-location-dropdown absolute left-0 mt-2 w-[180px] bg-white border border-gray-200 rounded-xl p-4 shadow-sm pointer-events-none opacity-0 scale-95 translate-y-[-4px] origin-top-left transition-[transform,opacity] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] z-50"
+          >
+            <span
+              class="block text-[11px] font-mono tracking-[0.12em] text-gray-800 font-medium mb-3 uppercase"
+            >
+              Location
+            </span>
+
+            <div class="space-y-2">
+              <button
+                class="w-full flex items-center gap-3 bg-[#e5e5e5] px-3 py-2.5 rounded-xl text-left text-base font-medium transition-colors duration-150"
+              >
+                <span class="w-4 h-4 bg-black rounded-full shrink-0"></span>
+                <span class="font-semibold tracking-wide">US</span>
+              </button>
+
+              <button
+                class="w-full flex items-center gap-3 bg-white border border-gray-200 px-3 py-2.5 rounded-xl text-left text-base font-medium hover:bg-gray-50 transition-colors duration-150"
+              >
+                <span
+                  class="w-4 h-4 border border-gray-300 rounded-full shrink-0 bg-white"
+                ></span>
+                <span class="font-semibold tracking-wide">JP</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <a
+          href="#"
+          class="dr-btn-secondary-nav px-4 sm:px-[22px] h-10 sm:h-[42px] rounded-md border border-gray-200 text-sm font-semibold flex items-center bg-white text-black"
+          >Log In</a
+        >
+        <a
+          href="#"
+          class="dr-btn-secondary-nav px-4 sm:px-[22px] h-10 sm:h-[42px] rounded-md border border-gray-200 text-sm font-semibold flex items-center bg-white text-black"
+          >Try</a
+        >
+        <a
+          href="#"
+          class="px-4 sm:px-[22px] h-10 sm:h-[42px] rounded-md bg-[#61ffa6] text-black text-sm font-semibold flex items-center"
+          >Demo</a
+        >
+        <button
+          class="dr-menu-toggle hidden w-10 h-10 flex-col gap-[5px] items-center justify-center bg-transparent border-none rounded-xl hover:bg-gray-100"
+        >
+          <span class="w-[20px] h-0.5 bg-black rounded-sm"></span
+          ><span class="w-[20px] h-0.5 bg-black rounded-sm"></span
+          ><span class="w-[20px] h-0.5 bg-black rounded-sm"></span>
+        </button>
+      </div>
+    </nav>
+
+    <!-- HERO SECTION (preserved) -->
+    <main
+      class="bg-white pt-20 pb-16 sm:pt-28 sm:pb-20 md:pt-36 md:pb-24 px-6 md:px-[90px]"
+    >
+      <div class="max-w-[1400px] mx-auto">
+        <div class="flex flex-col gap-1">
+          <p
+            class="text-4xl sm:text-5xl md:text-6xl lg:text-[74px] font-medium leading-[1.1] lg:leading-[0.94]"
+          >
+            You've staffed up.
+          </p>
+          <p
+            class="text-4xl sm:text-5xl md:text-6xl lg:text-[74px] font-medium leading-[1.1] lg:leading-[0.94]"
+          >
+            You've bought the GPUs.
+          </p>
+        </div>
+        <p
+          class="mt-4 md:mt-6 max-w-[720px] text-xl sm:text-2xl md:text-3xl lg:text-[34px] leading-[1.3] lg:leading-[1.22] tracking-tight"
+        >
+          The hard part? Making agentic AI work in the enterprise. That's where
+          we come in.
+        </p>
+        <div class="mt-6 md:mt-9 flex flex-col sm:flex-row gap-3">
+          <a
+            href="#"
+            class="inline-flex items-center justify-center h-11 sm:h-12 px-6 sm:px-[38px] rounded-md bg-[#61ffa6] text-black text-sm sm:text-[15px] font-semibold"
+            >Try it</a
+          ><a
+            href="#"
+            class="inline-flex items-center justify-center h-11 sm:h-12 px-4 sm:px-6 rounded-md border border-black text-black text-sm sm:text-[15px] font-semibold"
+            >Request a demo</a
+          >
+        </div>
+      </div>
+    </main>
+
+    <!-- WIPE BANNER -->
+    <div class="w-full h-11 bg-white relative overflow-hidden">
+      <div class="absolute inset-0">
+        <div class="dr-stripe-layer block-black-1"></div>
+        <div class="dr-stripe-layer block-mint-1"></div>
+        <div class="dr-stripe-layer block-black-2"></div>
+        <div class="dr-stripe-layer block-mint-2"></div>
+      </div>
+    </div>
+
+    <!-- WORKFORCE SHOWCASE -->
+    <section class="w-full bg-[#f7ff4a] px-6 md:px-20 py-16 md:py-[94px]">
+      <div class="max-w-[1440px] mx-auto flex flex-col gap-8 md:gap-[52px]">
+        <h2
+          class="text-3xl sm:text-4xl md:text-5xl lg:text-[52px] font-medium leading-tight md:leading-[1.08] tracking-tight"
+        >
+          Meet the only agent workforce platform built for outcomes — not
+          endless pilots.
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div
+            class="bg-black px-6 md:px-8 py-8 md:py-[38px] flex items-center gap-4"
+          >
+            <span class="w-2.5 h-2.5 bg-[#e2f022]"></span>
+            <p class="text-white text-base md:text-[19px] font-medium">
+              Replace 50+ AI tools.
+            </p>
+          </div>
+          <div
+            class="bg-black px-6 md:px-8 py-8 md:py-[38px] flex items-center gap-4"
+          >
+            <span class="w-2.5 h-2.5 bg-[#e2f022]"></span>
+            <p class="text-white text-base md:text-[19px] font-medium">
+              Launch your first agent in days, not quarters.
+            </p>
+          </div>
+          <div
+            class="bg-black px-6 md:px-8 py-8 md:py-[38px] flex items-center gap-4"
+          >
+            <span class="w-2.5 h-2.5 bg-[#e2f022]"></span>
+            <p class="text-white text-base md:text-[19px] font-medium">
+              Run anywhere. On-prem. Hybrid. Cross-cloud.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ENTERPRISE MATRIX -->
+    <section
+      class="w-full bg-[#070707] px-6 md:px-[60px] lg:px-[90px] py-16 md:py-[110px]"
+    >
+      <div class="max-w-[1440px] mx-auto">
+        <h2
+          class="text-white text-3xl sm:text-4xl md:text-5xl lg:text-[46px] font-medium leading-tight mb-10 md:mb-14"
+        >
+          Deliberately designed to
+          <span class="text-[#8a8d90]"
+            >unify complex enterprise environments</span
+          >
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div
+            class="dr-matrix-card bg-[#18191b] p-8 md:p-[42px_36px_46px] rounded relative"
+          >
+            <h3 class="text-[#4ade80] text-xl md:text-[21px] font-medium mb-3">
+              Foundational agents
+            </h3>
+            <p class="text-[#bcbfc2] text-base md:text-[17px]">
+              Agents that are easy to stand up and infuse into your
+              organization's specific processes.
+            </p>
+          </div>
+          <div
+            class="dr-matrix-card bg-[#18191b] p-8 md:p-[42px_36px_46px] rounded relative"
+          >
+            <h3 class="text-[#4ade80] text-xl md:text-[21px] font-medium mb-3">
+              Business agents
+            </h3>
+            <p class="text-[#bcbfc2] text-base md:text-[17px]">
+              Integrations, data models and UIs that make it easy to build your
+              own agents into SAP.
+            </p>
+            <div class="mt-6 md:mt-9">
+              <div
+                class="flex flex-wrap items-center bg-[#070707] border border-[#2e3033] min-h-[38px] py-1.5 sm:py-0 px-2.5 sm:px-3 w-fit max-w-full rounded gap-x-2 sm:gap-x-0"
+              >
+                <img
+                  src="/homepage-sap-logo.png"
+                  alt="SAP"
+                  class="h-4 w-auto object-contain shrink-0"
+                />
+                <div
+                  class="hidden sm:block w-px h-3.5 bg-[#3f4348] mx-2 md:mx-3 shrink-0"
+                ></div>
+                <span
+                  class="text-white text-[9px] xs:text-[10px] font-bold tracking-wide uppercase truncate"
+                >
+                  CO-DEVELOPED FOR SAP
+                </span>
+              </div>
+
+              <p
+                class="text-[#6c7075] text-xs mt-2.5 max-w-full leading-relaxed"
+              >
+                Exclusive agentic AI partner certified to run inside SAP
+                ecosystem.
+              </p>
+            </div>
+          </div>
+          <div
+            class="dr-matrix-card bg-[#18191b] p-8 md:p-[42px_36px_46px] rounded relative"
+          >
+            <h3 class="text-[#4ade80] text-xl md:text-[21px] font-medium mb-3">
+              Purpose-built agents
+            </h3>
+            <p class="text-[#bcbfc2] text-base md:text-[17px]">
+              Service-led delivery of agents built and managed by DataRobot.
+            </p>
+          </div>
+        </div>
+        <div class="mt-4">
+          <div
+            class="dr-matrix-card bg-[#18191b] p-8 md:p-[42px_36px_46px] rounded relative"
+          >
+            <h3 class="text-[#4ade80] text-xl md:text-[21px] font-medium mb-3">
+              Agent Workforce Platform
+            </h3>
+            <p class="text-[#bcbfc2] text-base md:text-[17px] max-w-[820px]">
+              The <em>only</em> end-to-end agent workforce platform for secure,
+              scalable, production-grade agents.
+            </p>
+            <div class="mt-6 md:mt-8">
+              <div
+                class="flex items-center bg-[#070707] border border-[#2e3033] h-[38px] px-3 w-fit rounded"
+              >
+                <img
+                  src="/homepage-nvidia-logo.png"
+                  alt="NVIDIA"
+                  class="h-4 w-auto"
+                />
+                <div class="w-px h-3.5 bg-[#3f4348] mx-2 md:mx-3"></div>
+                <span
+                  class="text-white text-[9px] font-bold tracking-wide whitespace-nowrap"
+                  >CO-ENGINEERED WITH NVIDIA</span
+                >
+              </div>
+              <p class="text-[#6c7075] text-xs mt-2">
+                The Agent Workforce Platform fully validated and embedded in
+                NVIDIA Enterprise AI.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIDEO SHOWCASE -->
+    <section class="w-full bg-white px-6 md:px-10 py-12 md:py-[60px]">
+      <div class="max-w-[1200px] mx-auto flex flex-col gap-6 md:gap-9">
+        <h2
+          class="text-2xl sm:text-3xl md:text-[32px] font-semibold tracking-tight"
+        >
+          With Prustaz, your agents
+          <span class="text-gray-400 font-normal">go beyond the demo.</span>
+        </h2>
+        <div
+          class="w-full bg-black relative overflow-hidden rounded-xl shadow-xl"
+        >
+          <div class="relative aspect-video">
+            <div
+              class="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/70 z-[3] flex flex-col justify-between p-3 sm:p-4"
+            >
+              <div class="flex justify-between items-center text-white">
+                <div class="flex items-center gap-2">
+                  <span
+                    class="w-7 h-7 sm:w-8 sm:h-8 bg-[#61ffa6] text-black rounded-full flex items-center justify-center font-bold text-xs sm:text-sm"
+                    >W</span
+                  ><span
+                    class="text-xs sm:text-sm font-medium drop-shadow line-clamp-1"
+                    >The Agent Workforce Platform.</span
+                  >
+                </div>
+                <div class="flex gap-3 opacity-90 text-xs sm:text-base">
+                  ⏵ ㏄ ⚙
+                </div>
+              </div>
+              <button
+                class="self-center w-14 h-14 sm:w-[68px] sm:h-[68px] bg-black/60 border-2 border-white/80 rounded-full text-white flex items-center justify-center backdrop-blur-sm hover:scale-105 transition"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  width="24"
+                  height="24"
+                  fill="currentColor"
+                >
+                  <path d="M8 5v14l11-7z" />
+                </svg>
+              </button>
+              <div class="flex flex-col gap-2">
+                <div class="w-full h-1 bg-white/30 relative cursor-pointer">
+                  <div class="w-[35%] h-full bg-red-500"></div>
+                </div>
+                <div
+                  class="flex justify-between text-white text-[10px] sm:text-xs"
+                >
+                  <span>0:00 / 1:17</span>
+                  <div class="flex gap-3 sm:gap-4">More videos ▶ YouTube</div>
+                </div>
+              </div>
+            </div>
+            <video
+              class="absolute inset-0 w-full h-full object-cover"
+              preload="auto"
+              playsinline
+              autoplay
+              muted
+              loop
+              src="/6994825_Virtual_Reality_Cyber_3840x2160.mp4"
+            ></video>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =============================================== -->
+    <!-- FULLY RESPONSIVE LIFECYCLE CARDS SECTION       -->
+    <!-- =============================================== -->
+    <section class="w-full bg-white px-5 sm:px-8 md:px-10 py-12 md:py-[90px]">
+      <div class="max-w-[1200px] mx-auto flex flex-col gap-8 md:gap-12">
+        <header class="text-center md:text-left">
+          <h2
+            class="text-2xl sm:text-3xl md:text-[32px] font-semibold tracking-tight"
+          >
+            One agent platform. For every team.
+          </h2>
+          <p
+            class="text-xl sm:text-2xl md:text-[32px] text-gray-400 font-normal mt-1"
+          >
+            Built to power each phase of your agent lifecycle.
+          </p>
+        </header>
+
+        <div
+          class="bg-[#2b2c2e] rounded-xl flex flex-col gap-6 md:gap-8 p-4 sm:p-6 md:p-8"
+        >
+          <!-- BUILD CARD - Fully Responsive -->
+          <div
+            class="phase-card-inner bg-[#0c0d0e] rounded-lg p-5 sm:p-8 md:p-12"
+          >
+            <div class="flex-1">
+              <h3
+                class="text-2xl sm:text-3xl md:text-[28px] font-medium text-white mb-4 md:mb-6"
+              >
+                Teams that <span class="text-green-500">build</span> agents
+              </h3>
+              <h4 class="text-sm sm:text-base text-white mb-5 md:mb-7">
+                Build enterprise-grade agents on your terms.
+              </h4>
+              <ul class="space-y-4 md:space-y-5">
+                <li class="flex gap-3">
+                  <span class="w-2 h-1 mt-2 bg-green-500 flex-shrink-0"></span>
+                  <p class="text-sm sm:text-[14.5px] text-gray-300">
+                    Build faster with customizable blueprints and built-in
+                    integrations.
+                  </p>
+                </li>
+                <li class="flex gap-3">
+                  <span class="w-2 h-1 mt-2 bg-green-500 flex-shrink-0"></span>
+                  <p class="text-sm sm:text-[14.5px] text-gray-300">
+                    Select the right components for your data and use case.
+                  </p>
+                </li>
+                <li class="flex gap-3">
+                  <span class="w-2 h-1 mt-2 bg-green-500 flex-shrink-0"></span>
+                  <p class="text-sm sm:text-[14.5px] text-gray-300">
+                    Optimal balance between accuracy, latency, and cost.
+                  </p>
+                </li>
+              </ul>
+            </div>
+            <div class="flex-1 flex justify-center">
+              <div
+                class="w-full max-w-[440px] bg-[#161719] border border-[#232529] rounded-lg overflow-hidden"
+              >
+                <div class="bg-[#1f2023] px-3.5 py-2.5 flex gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-red-500"></span
+                  ><span class="w-2 h-2 rounded-full bg-yellow-500"></span
+                  ><span class="w-2 h-2 rounded-full bg-green-500"></span>
+                </div>
+                <div class="p-4 sm:p-5 bg-[#121315]">
+                  <div
+                    class="mock-chart relative h-[140px] sm:h-[160px] border-l border-b border-gray-700"
+                  >
+                    <span
+                      class="absolute top-1 left-1 text-[7px] sm:text-[9px] text-gray-500"
+                      >Less costly & accurate</span
+                    >
+                    <span
+                      class="absolute top-1 right-1 text-[7px] sm:text-[9px] text-gray-500"
+                      >More accurate/costly</span
+                    >
+                    <svg
+                      viewBox="0 0 300 160"
+                      class="absolute inset-0 w-full h-full"
+                    >
+                      <path
+                        d="M 20 140 Q 120 100 280 30"
+                        fill="none"
+                        stroke="#22c55e"
+                        stroke-width="2"
+                        stroke-dasharray="4 4"
+                      />
+                      <circle cx="40" cy="130" r="3" fill="#22c55e" />
+                      <circle cx="150" cy="85" r="3" fill="#22c55e" />
+                      <circle cx="270" cy="35" r="3" fill="#22c55e" />
+                    </svg>
+                    <div
+                      class="absolute -bottom-5 left-0 w-full text-center text-[6px] sm:text-[8px] tracking-wide text-gray-500"
+                    >
+                      COST ($ PER 100 CALLS)
+                    </div>
+                    <div
+                      class="absolute -left-5 bottom-10 -rotate-90 text-[6px] sm:text-[8px] text-gray-500"
+                    >
+                      ACCURACY (%)
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- GOVERN CARD - Fully Responsive -->
+          <div
+            class="phase-card-inner bg-[#0c0d0e] rounded-lg p-5 sm:p-8 md:p-12"
+          >
+            <div class="flex-1">
+              <h3
+                class="text-2xl sm:text-3xl md:text-[28px] font-medium text-white mb-4 md:mb-6"
+              >
+                Teams that <span class="text-yellow-400">govern</span> agents
+              </h3>
+              <h4 class="text-sm sm:text-base text-white mb-5 md:mb-7">
+                No rogue agents. No blind spots.
+              </h4>
+              <ul class="space-y-4 md:space-y-5">
+                <li class="flex gap-3">
+                  <span class="w-2 h-1 mt-2 bg-yellow-400 flex-shrink-0"></span>
+                  <p class="text-sm sm:text-[14.5px] text-gray-300">
+                    Track every asset and activity across the agent lifecycle.
+                  </p>
+                </li>
+                <li class="flex gap-3">
+                  <span class="w-2 h-1 mt-2 bg-yellow-400 flex-shrink-0"></span>
+                  <p class="text-sm sm:text-[14.5px] text-gray-300">
+                    Define enforceable controls for compliance requirements.
+                  </p>
+                </li>
+                <li class="flex gap-3">
+                  <span class="w-2 h-1 mt-2 bg-yellow-400 flex-shrink-0"></span>
+                  <p class="text-sm sm:text-[14.5px] text-gray-300">
+                    Automated audit documentation to detect behavior issues.
+                  </p>
+                </li>
+              </ul>
+            </div>
+            <div class="flex-1 flex justify-center">
+              <div
+                class="w-full max-w-[440px] bg-[#161719] border border-[#232529] rounded-lg overflow-hidden"
+              >
+                <div class="bg-[#1f2023] px-3.5 py-2.5 flex gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-red-500"></span
+                  ><span class="w-2 h-2 rounded-full bg-yellow-500"></span
+                  ><span class="w-2 h-2 rounded-full bg-green-500"></span>
+                </div>
+                <div class="p-4 sm:p-5 bg-[#121315]">
+                  <div
+                    class="flex justify-between border-b border-gray-800 pb-2 flex-wrap gap-2"
+                  >
+                    <span class="text-yellow-400 font-bold text-xs"
+                      >Agent gallery <small>12</small></span
+                    ><span class="text-xs">🔍 Filter</span>
+                  </div>
+                  <div class="mt-3 space-y-2 text-[10px] sm:text-[11px]">
+                    <div
+                      class="grid grid-cols-[1.5fr,0.8fr,0.8fr] sm:grid-cols-[2fr,1fr,1fr] gap-2 text-gray-500 pb-1 border-b border-gray-800"
+                    >
+                      <span>Registered model</span><span>Versions</span
+                      ><span>Target</span>
+                    </div>
+                    <div
+                      class="grid grid-cols-[1.5fr,0.8fr,0.8fr] sm:grid-cols-[2fr,1fr,1fr] gap-2 pb-1 border-b border-gray-800"
+                    >
+                      <span class="text-white">🤖 CrewAI agentic flow</span
+                      ><span class="text-gray-300">2 versions</span
+                      ><span
+                        class="bg-green-500/20 text-green-400 px-1 rounded text-[9px] sm:text-[10px]"
+                        >Deployed</span
+                      >
+                    </div>
+                    <div
+                      class="grid grid-cols-[1.5fr,0.8fr,0.8fr] sm:grid-cols-[2fr,1fr,1fr] gap-2"
+                    >
+                      <span class="text-white">📦 Custom model</span
+                      ><span class="text-gray-300">1 version</span
+                      ><span
+                        class="bg-yellow-500/20 text-yellow-400 px-1 rounded text-[9px] sm:text-[10px]"
+                        >Review</span
+                      >
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- OPERATE CARD - Fully Responsive -->
+          <div
+            class="phase-card-inner bg-[#0c0d0e] rounded-lg p-5 sm:p-8 md:p-12"
+          >
+            <div class="flex-1">
+              <h3
+                class="text-2xl sm:text-3xl md:text-[28px] font-medium text-white mb-4 md:mb-6"
+              >
+                Teams that <span class="text-indigo-400">operate</span> agents
+              </h3>
+              <h4 class="text-sm sm:text-base text-white mb-5 md:mb-7">
+                Keep your agents running safely and securely.
+              </h4>
+              <ul class="space-y-4 md:space-y-5">
+                <li class="flex gap-3">
+                  <span class="w-2 h-1 mt-2 bg-indigo-400 flex-shrink-0"></span>
+                  <p class="text-sm sm:text-[14.5px] text-gray-300">
+                    Orchestrate compute dynamically — edge, cloud, on-prem.
+                  </p>
+                </li>
+                <li class="flex gap-3">
+                  <span class="w-2 h-1 mt-2 bg-indigo-400 flex-shrink-0"></span>
+                  <p class="text-sm sm:text-[14.5px] text-gray-300">
+                    Monitor agent quality and mitigate issues in real time.
+                  </p>
+                </li>
+                <li class="flex gap-3">
+                  <span class="w-2 h-1 mt-2 bg-indigo-400 flex-shrink-0"></span>
+                  <p class="text-sm sm:text-[14.5px] text-gray-300">
+                    Authenticate agents and users to control access.
+                  </p>
+                </li>
+              </ul>
+            </div>
+            <div class="flex-1 flex justify-center">
+              <div
+                class="w-full max-w-[440px] bg-[#161719] border border-[#232529] rounded-lg overflow-hidden"
+              >
+                <div class="bg-[#1f2023] px-3.5 py-2.5 flex gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-red-500"></span
+                  ><span class="w-2 h-2 rounded-full bg-yellow-500"></span
+                  ><span class="w-2 h-2 rounded-full bg-green-500"></span>
+                </div>
+                <div
+                  class="p-4 sm:p-5 bg-[#121315] font-mono text-[10px] sm:text-[11px]"
+                >
+                  <h5 class="text-gray-400 mb-3 text-xs sm:text-sm">
+                    Distributed agent tracing
+                  </h5>
+                  <div class="space-y-2">
+                    <div
+                      class="p-1.5 bg-[#1a1b1e] border-l-2 border-gray-600 rounded-r"
+                    >
+                      <span class="text-white">openai.chat | 2606.61ms</span>
+                    </div>
+                    <div
+                      class="ml-3 sm:ml-4 p-1.5 bg-[#1a1b1e] border-l-2 border-indigo-600 rounded-r"
+                    >
+                      <span class="text-white"
+                        >crewai.chat.completions | 2452.84ms</span
+                      >
+                    </div>
+                    <div
+                      class="ml-6 sm:ml-8 p-1.5 bg-indigo-500/10 border-l-2 border-indigo-400 rounded-r text-white"
+                    >
+                      <span>Workspace Guard: Toxicity | .04ms</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SOCIAL PROOF SECTION (condensed but responsive) -->
+    <section class="w-full bg-white px-5 sm:px-8 md:px-10 pb-12 md:pb-16">
+      <div class="max-w-[1200px] mx-auto">
+        <h2
+          class="text-2xl sm:text-3xl md:text-[32px] font-semibold mb-6 md:mb-8"
+        >
+          Don't take our word for it
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <!-- Testimonial 1 -->
+          <div class="bg-[#f4f4f5] p-6 md:p-8 rounded-lg recognition-card">
+            <blockquote class="text-sm md:text-[14.5px] leading-relaxed">
+              "Enterprise IT teams are seeking best practices. DataRobot's
+              inclusion with NVIDIA provides ideal solution."
+            </blockquote>
+            <div class="mt-5 md:mt-6">
+              <span class="font-semibold text-sm">John Fanelli</span
+              ><span class="block text-xs text-gray-500">VP, NVIDIA</span>
+            </div>
+          </div>
+
+          <!-- Case Study 1 -->
+          <div
+            class="bg-black rounded-lg overflow-hidden case-study-visual-card"
+          >
+            <div class="h-[200px] md:h-[240px] overflow-hidden">
+              <img
+                src="/large-industrial-warehouse-with-stacks-cardboard-boxes-pallets.jpg"
+                class="simulated-asset-img w-full h-full object-cover"
+                alt="Warehouse"
+              />
+            </div>
+            <div class="p-4 md:p-5">
+              <div class="flex items-center gap-1.5 mb-2">
+                <span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span
+                ><span
+                  class="text-[8px] md:text-[9.5px] font-bold text-gray-400 uppercase"
+                  >Top consumer tech brand</span
+                >
+              </div>
+              <h3 class="text-2xl md:text-[32px] font-bold text-white">
+                $60M ROI
+              </h3>
+              <p class="text-gray-300 text-xs md:text-sm">
+                50+ AI use cases covering supply chain
+              </p>
+            </div>
+          </div>
+
+          <!-- Testimonial 2 -->
+          <div class="bg-[#f4f4f5] p-6 md:p-8 rounded-lg recognition-card">
+            <blockquote class="text-sm md:text-[14.5px]">
+              "DataRobot brings ability to iterate quickly. We can try new
+              things and put them into production fast."
+            </blockquote>
+            <div class="mt-5 md:mt-6">
+              <span class="font-semibold text-sm">Ben DuBois</span
+              ><span class="block text-xs"
+                >Director at Norfolk Iron & Metal</span
+              >
+            </div>
+          </div>
+
+          <!-- Case Study 2 -->
+          <div
+            class="bg-black rounded-lg overflow-hidden case-study-visual-card"
+          >
+            <div class="h-[200px] md:h-[240px] overflow-hidden">
+              <img
+                src="/aerial-view-cargo-ship-cargo-container-harbor.jpg"
+                class="simulated-asset-img w-full h-full object-cover"
+                alt="Cargo Ship"
+              />
+            </div>
+            <div class="p-4 md:p-5">
+              <div class="flex items-center gap-1.5 mb-2">
+                <span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span
+                ><span
+                  class="text-[8px] md:text-[9.5px] font-bold text-gray-400 uppercase"
+                  >Global Energy Innovator</span
+                >
+              </div>
+              <h3 class="text-2xl md:text-[32px] font-bold text-white">
+                $200M ROI
+              </h3>
+              <p class="text-gray-300 text-xs md:text-sm">
+                600+ AI use cases from stuck pipe detection to well performance
+              </p>
+            </div>
+          </div>
+
+          <!-- Testimonial 3 -->
+          <div class="bg-[#f4f4f5] p-6 md:p-8 rounded-lg recognition-card">
+            <blockquote class="text-sm md:text-[14.5px]">
+              "The platform made it easy to bring together data across
+              Snowflake, SQL, and S3 — automating the entire forecasting
+              process."
+            </blockquote>
+            <div class="mt-5 md:mt-6">
+              <span class="font-semibold text-sm">Venkatesh Sekar</span
+              ><span class="block text-xs"
+                >Enterprise Architect: AI/ML at NetAPP</span
+              >
+            </div>
+          </div>
+
+          <!-- Case Study 3 -->
+          <div
+            class="bg-black rounded-lg overflow-hidden case-study-visual-card"
+          >
+            <div class="h-[200px] md:h-[240px] overflow-hidden">
+              <img
+                src="/us-flag-building.jpg"
+                class="simulated-asset-img w-full h-full object-cover"
+                alt="Bank Building"
+              />
+            </div>
+            <div class="p-4 md:p-5">
+              <div class="flex items-center gap-1.5 mb-2">
+                <span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span
+                ><span
+                  class="text-[8px] md:text-[9.5px] font-bold text-gray-400 uppercase"
+                  >Top 5 Global Bank</span
+                >
+              </div>
+              <h3 class="text-2xl md:text-[32px] font-bold text-white">
+                $70M ROI
+              </h3>
+              <p class="text-gray-300 text-xs md:text-sm">
+                40+ AI use cases firm-wide, from capital markets to wealth
+                management
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA SECTION -->
+    <section class="w-full bg-white px-5 sm:px-8 md:px-10 py-12 md:py-20">
+      <div
+        class="max-w-[1200px] mx-auto bg-[#61ffa6] p-8 sm:p-12 md:p-[72px_64px] rounded-2xl"
+      >
+        <div class="flex flex-col gap-6 md:gap-8">
+          <h2
+            class="text-3xl sm:text-4xl md:text-5xl lg:text-[56px] font-medium leading-tight"
+          >
+            Everyone says they're agentic.
+          </h2>
+          <div>
+            <p class="text-lg sm:text-xl md:text-[22px] mb-4 md:mb-5">
+              We actually are.
+            </p>
+            <a
+              href="#"
+              class="btn-cta-dark inline-flex items-center justify-center bg-black h-11 sm:h-12 px-5 sm:px-7 rounded-md"
+              ><span class="btn-text text-white text-sm font-semibold"
+                >Try it for yourself</span
+              ></a
+            >
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FOOTER (condensed) -->
+    <footer
+      class="w-full bg-[#050505] px-6 md:px-16 py-12 md:py-20 border-t border-[#111]"
+    >
+      <div
+        class="max-w-[1540px] mx-auto flex flex-col lg:flex-row gap-10 lg:gap-12 justify-between"
+      >
+        <div class="flex items-center gap-3 text-white">
+          <img
+            src="/Prustaz_logo_white.png"
+            alt="Prustaz Logo"
+            width="108"
+            height="102"
+            class="h-[102px] w-[108px] object-contain block"
+          />
+          <span
+            class="text-3xl md:text-4xl font-medium tracking-tight leading-none"
+            >Prustaz</span
+          >
+        </div>
+        <div
+          class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-8 md:gap-12"
+        >
+          <div>
+            <h3
+              class="text-white text-sm font-semibold border-b border-gray-800 pb-3 mb-4"
+            >
+              Why
+            </h3>
+            <ul class="space-y-2">
+              <li><a href="#" class="text-white text-sm">AI Leaders</a></li>
+              <li><a href="#" class="text-white text-sm">Practitioners</a></li>
+            </ul>
+          </div>
+          <div>
+            <h3
+              class="text-white text-sm font-semibold border-b border-gray-800 pb-3 mb-4"
+            >
+              Solutions
+            </h3>
+            <ul>
+              <li><a href="#" class="text-white text-sm">Finance</a></li>
+              <li><a href="#" class="text-white text-sm">Supply Chain</a></li>
+            </ul>
+          </div>
+          <div>
+            <h3
+              class="text-white text-sm font-semibold border-b border-gray-800 pb-3 mb-4"
+            >
+              Platform
+            </h3>
+            <ul>
+              <li><a href="#" class="text-white text-sm">Agentic AI</a></li>
+              <li><a href="#" class="text-white text-sm">GenAI</a></li>
+            </ul>
+          </div>
+          <div>
+            <h3
+              class="text-white text-sm font-semibold border-b border-gray-800 pb-3 mb-4"
+            >
+              Partners
+            </h3>
+            <ul>
+              <li><a href="#" class="text-white text-sm">NVIDIA</a></li>
+              <li><a href="#" class="text-white text-sm">SAP</a></li>
+            </ul>
+          </div>
+          <div>
+            <h3
+              class="text-white text-sm font-semibold border-b border-gray-800 pb-3 mb-4"
+            >
+              Resources
+            </h3>
+            <ul>
+              <li><a href="#" class="text-white text-sm">Docs</a></li>
+              <li><a href="#" class="text-white text-sm">Training</a></li>
+            </ul>
+          </div>
+          <div>
+            <h3
+              class="text-white text-sm font-semibold border-b border-gray-800 pb-3 mb-4"
+            >
+              About
+            </h3>
+            <ul>
+              <li><a href="#" class="text-white text-sm">Careers</a></li>
+              <li><a href="#" class="text-white text-sm">Contact</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <div
+      class="w-full bg-[#050505] px-6 md:px-16 py-6 md:py-8 border-t border-[#111]"
+    >
+      <div
+        class="max-w-[1540px] mx-auto flex flex-col md:flex-row justify-between items-center gap-4"
+      >
+        <div class="flex flex-wrap gap-6 items-center justify-center">
+          <nav class="flex gap-6">
+            <a
+              href="#"
+              class="text-white text-[10px] md:text-[11px] font-semibold underline"
+              >LEGAL</a
+            ><a
+              href="#"
+              class="text-white text-[10px] md:text-[11px] font-semibold underline"
+              >PRIVACY</a
+            ><a
+              href="#"
+              class="text-white text-[10px] md:text-[11px] font-semibold underline"
+              >TRUST</a
+            >
+          </nav>
+          <span
+            class="text-white text-[10px] md:text-[11px] font-medium text-center"
+            >COPYRIGHT © 2026 PRUSTAZ, INC. - ALL RIGHTS RESERVED</span
+          >
+        </div>
+        <div class="flex flex-wrap gap-1 items-center h-5">
+          <span class="block w-3 h-full bg-gray-700"></span
+          ><span class="block w-2 h-full bg-gray-500"></span
+          ><span class="block w-2 h-full bg-gray-300"></span
+          ><span class="block w-1 h-full bg-green-200"></span
+          ><span class="block w-1 h-full bg-green-300"></span
+          ><span class="block w-1 h-full bg-green-400"></span
+          ><span class="block w-1 h-full bg-yellow-200"></span
+          ><span class="block w-1 h-full bg-yellow-300"></span
+          ><span class="block w-1 h-full bg-teal-400"></span
+          ><span class="block w-2 h-full bg-blue-400"></span
+          ><span class="block w-3 h-full bg-blue-500"></span
+          ><span class="block w-2 h-full bg-purple-400"></span
+          ><span class="block w-3 h-full bg-purple-500"></span
+          ><span class="block w-3 h-full bg-sky-300"></span
+          ><span class="block w-4 h-full bg-sky-400"></span
+          ><span class="block w-8 h-full bg-cyan-400"></span
+          ><span class="block flex-grow h-full bg-[#61ffa6]"></span>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        const toggle = document.querySelector(".dr-menu-toggle");
+        if (!toggle) return;
+
+        // Create overlay container with standard clean Tailwind classes
+        const overlay = document.createElement("div");
+        overlay.className =
+          "dr-mobile-overlay fixed inset-0 bg-white z-[9999] overflow-y-auto hidden [&.active]:block font-sans antialiased text-[#070707]";
+
+        overlay.innerHTML = `
+      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+        <div class="flex items-center gap-2">
+ 
+  <img 
+    src="/Prustaz_logo_dark.png" 
+    alt="DataRobot Logo" 
+    class="h-12 w-auto object-contain"
+  />
+</div>
+        <button class="close-mobile p-2 text-black hover:bg-gray-100 rounded-full transition-colors" aria-label="Close Menu">
+          <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="px-6 py-4">
+        <div class="flex items-center gap-3 mb-6">
+          <div class="relative flex-1">
+            <input type="text" placeholder="Search" class="w-full bg-gray-50 border border-gray-300 rounded-md py-2.5 pl-4 pr-10 text-base placeholder-gray-500 focus:outline-none focus:border-black focus:ring-1 focus:ring-black" />
+          </div>
+          <button class="p-2.5 border border-gray-300 rounded-full hover:bg-gray-50 transition-colors" aria-label="Languages">
+            <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>
+            </svg>
+          </button>
+        </div>
+
+        <nav class="space-y-1">
+          <div class="dr-menu-item group border-b border-gray-100 last:border-0">
+            <button class="dr-accordion-trigger w-full flex items-center justify-between py-4 text-[17px] font-medium text-left transition-colors hover:text-green-600">
+              <span>Why Prustaz</span>
+              <svg class="w-4 h-4 text-gray-500 transform transition-transform duration-200 group-[.open]:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+            </button>
+            <div class="dr-accordion-content hidden group-[.open]:block pl-4 pb-3 space-y-2.5 text-gray-600 text-base">
+              <a href="#" class="block py-1 hover:text-black">Overview</a>
+              <a href="#" class="block py-1 hover:text-black">Value Calculator</a>
+              <a href="#" class="block py-1 hover:text-black">Customer Stories</a>
+              <a href="#" class="block py-1 hover:text-black">AI Security & Trust</a>
+            </div>
+          </div>
+
+          <div class="dr-menu-item group border-b border-gray-100 last:border-0">
+            <button class="dr-accordion-trigger w-full flex items-center justify-between py-4 text-[17px] font-medium text-left transition-colors hover:text-green-600">
+              <span>Solutions</span>
+              <svg class="w-4 h-4 text-gray-500 transform transition-transform duration-200 group-[.open]:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+            </button>
+            <div class="dr-accordion-content hidden group-[.open]:block pl-4 pb-3 space-y-2.5 text-gray-600 text-base">
+              <a href="#" class="block py-1 hover:text-black">Generative AI Apps</a>
+              <a href="#" class="block py-1 hover:text-black">Predictive Analytics</a>
+              <a href="#" class="block py-1 hover:text-black">Financial Services</a>
+              <a href="#" class="block py-1 hover:text-black">Healthcare Solutions</a>
+            </div>
+          </div>
+
+          <div class="dr-menu-item group border-b border-gray-100 last:border-0">
+            <button class="dr-accordion-trigger w-full flex items-center justify-between py-4 text-[17px] font-medium text-left transition-colors hover:text-green-600">
+              <span>Platform</span>
+              <svg class="w-4 h-4 text-gray-500 transform transition-transform duration-200 group-[.open]:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+            </button>
+            <div class="dr-accordion-content hidden group-[.open]:block pl-4 pb-3 space-y-2.5 text-gray-600 text-base">
+              <a href="#" class="block py-1 hover:text-black">Data Preparation</a>
+              <a href="#" class="block py-1 hover:text-black">Model Development</a>
+              <a href="#" class="block py-1 hover:text-black">MLOps & Governance</a>
+              <a href="#" class="block py-1 hover:text-black">Integrations</a>
+            </div>
+          </div>
+
+          <div class="dr-menu-item group border-b border-gray-100 last:border-0">
+            <button class="dr-accordion-trigger w-full flex items-center justify-between py-4 text-[17px] font-medium text-left transition-colors hover:text-green-600">
+              <span>Tech Partners</span>
+              <svg class="w-4 h-4 text-gray-500 transform transition-transform duration-200 group-[.open]:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+            </button>
+            <div class="dr-accordion-content hidden group-[.open]:block pl-4 pb-3 space-y-2.5 text-gray-600 text-base">
+              <a href="#" class="block py-1 hover:text-black">NVIDIA Ecosystem</a>
+              <a href="#" class="block py-1 hover:text-black">SAP Integrations</a>
+              <a href="#" class="block py-1 hover:text-black">AWS Partnership</a>
+              <a href="#" class="block py-1 hover:text-black">Snowflake Alliance</a>
+            </div>
+          </div>
+
+          <div class="dr-menu-item group border-b border-gray-100 last:border-0">
+            <button class="dr-accordion-trigger w-full flex items-center justify-between py-4 text-[17px] font-medium text-left transition-colors hover:text-green-600">
+              <span>Resources</span>
+              <svg class="w-4 h-4 text-gray-500 transform transition-transform duration-200 group-[.open]:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+            </button>
+            <div class="dr-accordion-content hidden group-[.open]:block pl-4 pb-3 space-y-2.5 text-gray-600 text-base">
+              <a href="#" class="block py-1 hover:text-black">Documentation</a>
+              <a href="#" class="block py-1 hover:text-black">AI Blog</a>
+              <a href="#" class="block py-1 hover:text-black">White Papers</a>
+              <a href="#" class="block py-1 hover:text-black">Community Forum</a>
+            </div>
+          </div>
+
+          <div class="dr-menu-item group border-b border-gray-100 last:border-0">
+            <button class="dr-accordion-trigger w-full flex items-center justify-between py-4 text-[17px] font-medium text-left transition-colors hover:text-green-600">
+              <span>About</span>
+              <svg class="w-4 h-4 text-gray-500 transform transition-transform duration-200 group-[.open]:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+            </button>
+            <div class="dr-accordion-content hidden group-[.open]:block pl-4 pb-3 space-y-2.5 text-gray-600 text-base">
+              <a href="#" class="block py-1 hover:text-black">Company Overview</a>
+              <a href="#" class="block py-1 hover:text-black">Leadership</a>
+              <a href="#" class="block py-1 hover:text-black">Careers</a>
+              <a href="#" class="block py-1 hover:text-black">Contact Us</a>
+            </div>
+          </div>
+        </nav>
+
+        <div class="mt-8 flex flex-wrap gap-3">
+          <a href="#" class="flex-1 min-w-[120px] py-3 text-center text-sm font-medium border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">Log In</a>
+          <a href="#" class="flex-1 min-w-[150px] py-3 text-center text-sm font-medium border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">Try DataRobot</a>
+        </div>
+        <div class="mt-3">
+          <a href="#" class="block w-fit px-6 py-3 text-center text-sm font-semibold bg-[#4ade80] text-black rounded-md hover:bg-green-400 transition-colors">Request a Demo</a>
+        </div>
+      </div>
+    `;
+
+        document.body.appendChild(overlay);
+
+        // Event Registration Hooks
+        const closeBtn = overlay.querySelector(".close-mobile");
+
+        // Setup Accordion Trigger Logic
+        overlay.querySelectorAll(".dr-accordion-trigger").forEach((trigger) => {
+          trigger.addEventListener("click", () => {
+            const currentItem = trigger.closest(".dr-menu-item");
+            const isOpen = currentItem.classList.contains("open");
+
+            // Optional: Close all other open accordions for true accordion behavior
+            overlay
+              .querySelectorAll(".dr-menu-item")
+              .forEach((item) => item.classList.remove("open"));
+
+            if (!isOpen) {
+              currentItem.classList.add("open");
+            }
+          });
+        });
+
+        const closeMenu = () => {
+          overlay.classList.remove("active");
+          document.body.style.overflow = "";
+        };
+
+        toggle.addEventListener("click", () => {
+          overlay.classList.add("active");
+          document.body.style.overflow = "hidden";
+        });
+
+        closeBtn?.addEventListener("click", closeMenu);
+
+        // Ensure links close menu cleanly
+        overlay.querySelectorAll(".dr-accordion-content a").forEach((a) => {
+          a.addEventListener("click", closeMenu);
+        });
+
+        window.addEventListener("resize", () => {
+          if (
+            window.innerWidth > 1024 &&
+            overlay.classList.contains("active")
+          ) {
+            closeMenu();
+          }
+        });
+      })();
+    </script>
+
+    <script>
+      (function () {
+        const container = document.querySelector(".dr-location-wrapper");
+        if (!container) return;
+
+        const btn = container.querySelector(".dr-location-btn");
+        const dropdown = container.querySelector(".dr-location-dropdown");
+
+        function toggleDropdown() {
+          const isExpanded = btn.getAttribute("aria-expanded") === "true";
+          if (!isExpanded) {
+            // OPEN: Remove hidden/clipping states and update transform classes
+            dropdown.classList.remove(
+              "pointer-events-none",
+              "opacity-0",
+              "scale-95",
+              "translate-y-[-4px]",
+            );
+            dropdown.classList.add(
+              "pointer-events-auto",
+              "opacity-100",
+              "scale-100",
+              "translate-y-0",
+            );
+            btn.setAttribute("aria-expanded", "true");
+          } else {
+            closeDropdown();
+          }
+        }
+
+        function closeDropdown() {
+          // CLOSE: Smoothly reverse the scale, placement offsets, and opacity values
+          dropdown.classList.remove(
+            "pointer-events-auto",
+            "opacity-100",
+            "scale-100",
+            "translate-y-0",
+          );
+          dropdown.classList.add(
+            "pointer-events-none",
+            "opacity-0",
+            "scale-95",
+            "translate-y-[-4px]",
+          );
+          btn.setAttribute("aria-expanded", "false");
+        }
+
+        // Toggle on click
+        btn.addEventListener("click", function (e) {
+          e.stopPropagation();
+          toggleDropdown();
+        });
+
+        // Close when clicking anywhere outside the selector
+        document.addEventListener("click", function (e) {
+          if (!container.contains(e.target)) {
+            closeDropdown();
+          }
+        });
+
+        // Close on escape key
+        document.addEventListener("keydown", function (e) {
+          if (e.key === "Escape") {
+            closeDropdown();
+          }
+        });
+      })();
+    </script>
+  </body>
+</html>
