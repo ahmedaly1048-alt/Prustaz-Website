@@ -1,0 +1,1258 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <title>Build an agent that writes its own tools | Prustaz</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=IBM+Plex+Mono:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['"DM Sans"', "sans-serif"],
+              mono: ['"IBM Plex Mono"', "monospace"],
+            },
+            colors: {
+              mint: "#61ffa6",
+              "mint-hover": "#4ade80",
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      /* ── NAVBAR ── */
+      .dr-nav-item { position: static; }
+      .dr-megamenu-panel {
+        position: absolute;
+        top: 76px;
+        left: 0;
+        width: 100%;
+        background-color: #ffffff;
+        box-shadow: 0 10px 15px -3px rgba(0,0,0,.05), 0 4px 6px -4px rgba(0,0,0,.02);
+        border-bottom: 1px solid #f3f4f6;
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(4px);
+        transition: opacity .2s ease, transform .2s ease, visibility .2s;
+        pointer-events: none;
+        z-index: 999;
+      }
+      .dr-nav-item:hover .dr-megamenu-panel {
+        opacity: 1; visibility: visible; transform: translateY(0); pointer-events: auto;
+      }
+      .dr-nav-item.active .dr-nav-link::after {
+        content: ""; position: absolute; bottom: 0; left: 0;
+        width: 100%; height: 2px; background-color: #61ffa6;
+      }
+
+      /* ── MOBILE OVERLAY ── */
+      .dr-mobile-overlay {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100vh;
+        background: #fff; z-index: 10000;
+        transform: translateX(100%);
+        transition: transform .4s cubic-bezier(.16,1,.3,1);
+        overflow-y: auto; visibility: hidden;
+      }
+      .dr-mobile-overlay.active { transform: translateX(0); visibility: visible; }
+      @keyframes slideDown {
+        from { opacity: 0; transform: translateY(-10px); }
+        to   { opacity: 1; transform: translateY(0); }
+      }
+
+      /* ── RESPONSIVE NAV BREAKPOINT ── */
+      @media (max-width: 1024px) {
+        .dr-nav-menu-desktop { display: none !important; }
+        .dr-icon-btn, .dr-btn-secondary-nav { display: none !important; }
+        .dr-menu-toggle { display: flex !important; }
+      }
+      @media (min-width: 1025px) { .dr-menu-toggle { display: none !important; } }
+
+      /* ── CTA BUTTON SWEEP ── */
+      .btn-cta-dark {
+        position: relative; overflow: hidden;
+        transition: transform .3s cubic-bezier(.16,1,.3,1);
+      }
+      .btn-cta-dark::before {
+        content: ""; position: absolute; top: 0; left: 0;
+        width: 100%; height: 100%; background-color: #22252a;
+        transform: translateY(100%);
+        transition: transform .3s cubic-bezier(.16,1,.3,1); z-index: 1;
+      }
+      .btn-cta-dark:hover::before { transform: translateY(0); }
+      .btn-cta-dark:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(12,13,14,.15); }
+      .btn-cta-dark .btn-text { position: relative; z-index: 2; }
+
+      /* ── ARTICLE PROSE ── */
+      .prose-article p  { font-size: clamp(15px, 1.6vw, 16px); line-height: 1.7; color: #222; margin-bottom: 1.25rem; }
+      .prose-article h2 { font-size: clamp(24px, 3.5vw, 40px); font-weight: 700; letter-spacing: -.02em; line-height: 1.15; color: #000; margin-bottom: 1.25rem; }
+      .prose-article h3 { font-size: clamp(18px, 2.2vw, 22px); font-weight: 700; color: #000; margin-bottom: .75rem; }
+      .prose-article code {
+        font-family: 'IBM Plex Mono', monospace;
+        font-size: 13px; color: #e3564a; font-weight: 500; letter-spacing: .01em;
+      }
+      .prose-article a { color: #2563eb; }
+      .prose-article a:hover { text-decoration: underline; }
+      .prose-article blockquote {
+        border-left: 4px solid #000; padding-left: 1rem;
+        margin: 1.25rem 0; font-style: italic; color: #333;
+      }
+
+      /* ── CODE BLOCKS ── */
+      .code-block-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+      /* ── RELATED POSTS HOVER ── */
+      .related-card { transition: background-color .3s ease; }
+      .related-card:hover { background-color: #A3B1FF; }
+    </style>
+  </head>
+  <body class="font-sans bg-white text-black antialiased">
+
+    <!-- ══════════════════════════════════════════════
+         NAVBAR — exact from index.html
+    ══════════════════════════════════════════════ -->
+    <nav class="flex items-center justify-around bg-white px-4 sm:px-8 h-[76px] sticky top-0 z-[1000] border-b border-gray-100">
+       <a href="index.html" class="flex items-center gap-2.5 cursor-pointer select-none no-underline">
+  <img
+    src="./Prustaz_logo_dark.png"
+    alt="Logo"
+    class="h-[50px] sm:h-[60px] w-auto object-contain block"
+  />
+</a>
+
+      <ul class="dr-nav-menu-desktop flex items-center list-none gap-4 lg:gap-6 h-full">
+
+        <li class="dr-nav-item flex items-center h-full">
+          <a href="#" class="dr-nav-link text-black text-sm font-medium h-full flex items-center relative no-underline tracking-tight px-1">Why Prustaz</a>
+          <div class="dr-megamenu-panel">
+            <div class="flex flex-col md:flex-row max-w-[1440px] mx-auto px-6 md:px-20 py-8 md:py-11 gap-8 md:gap-[60px]">
+              <div class="flex flex-col w-full md:w-[24%]">
+                <h3 class="text-[15px] font-semibold text-black mb-3">Why Prustaz?</h3>
+                <p class="text-sm text-gray-400">Discover the benefits of automated generative and predictive AI.</p>
+              </div>
+              <div class="flex flex-col md:flex-row gap-8 md:gap-[85px]">
+                <div>
+                  <span class="text-[10.5px] font-semibold text-[#babcbe] tracking-wide mb-4 block uppercase">Discover</span>
+                  <ul class="flex flex-col gap-3">
+                    <li><a href="#" class="text-[14px] font-medium text-black hover:text-black">AI Leaders</a></li>
+                    <li><a href="#" class="text-[14px] font-medium text-black hover:text-black">AI Practitioners</a></li>
+                  </ul>
+                </div>
+                <div>
+                  <span class="text-[10.5px] font-semibold text-[#babcbe] tracking-wide mb-4 block uppercase">Validation</span>
+                  <ul class="flex flex-col gap-3">
+                    <li><a href="#" class="text-[14px] font-medium text-black hover:text-black">Awards and Recognition</a></li>
+                    <li><a href="#" class="text-[14px] font-medium text-black hover:text-black">Customers</a></li>
+                  </ul>
+                </div>
+                <div>
+                  <span class="text-[10.5px] font-semibold text-[#babcbe] tracking-wide mb-4 block uppercase">Enterprise AI Suite</span>
+                  <ul class="flex flex-col gap-3">
+                    <li><a href="#" class="text-[14px] font-medium text-black hover:text-black">AI Apps & Agents</a></li>
+                    <li><a href="#" class="text-[14px] font-medium text-black hover:text-black">Agentic AI Platform</a></li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </li>
+
+        <li class="dr-nav-item flex items-center h-full">
+          <a href="#" class="dr-nav-link text-black text-sm font-medium h-full flex items-center relative no-underline tracking-tight px-1">Solutions</a>
+          <div class="dr-megamenu-panel">
+            <div class="flex flex-col md:flex-row max-w-[1440px] mx-auto px-6 md:px-20 py-8 md:py-11 gap-8 md:gap-[60px]">
+              <div class="w-full md:w-[24%]">
+                <h3 class="text-[15px] font-semibold">Solutions</h3>
+                <p class="text-sm text-gray-400">Explore workflows optimized for vertical industries.</p>
+              </div>
+              <div class="flex flex-col md:flex-row gap-8 md:gap-[85px]">
+                <div>
+                  <span class="text-[10.5px] font-semibold text-[#babcbe] tracking-wide mb-4 block uppercase">Department</span>
+                  <ul class="flex flex-col gap-3">
+                    <li><a href="#" class="text-[14px] font-medium text-black hover:text-black">Finance</a></li>
+                    <li><a href="#" class="text-[14px] font-medium text-black hover:text-black">Supply Chain & Operations</a></li>
+                  </ul>
+                </div>
+                <div>
+                  <span class="text-[10.5px] font-semibold text-[#babcbe] tracking-wide mb-4 block uppercase">Purpose-Built</span>
+                  <ul class="flex flex-col gap-3">
+                    <li><a href="#" class="text-[14px] font-medium text-black hover:text-black">Government</a></li>
+                    <li><a href="#" class="text-[14px] font-medium text-black hover:text-black">Oil and Gas</a></li>
+                    <li><a href="#" class="text-[14px] font-medium text-black hover:text-black">Life Sciences</a></li>
+                    <li><a href="#" class="text-[14px] font-medium text-black hover:text-black">Financial Services</a></li>
+                    <li><a href="#" class="text-[14px] font-medium text-black hover:text-black">Manufacturing</a></li>
+                  </ul>
+                </div>
+                <div>
+                  <span class="text-[10.5px] font-semibold text-[#babcbe] tracking-wide mb-4 block uppercase">Co-Engineered</span>
+                  <ul class="flex flex-col gap-3">
+                    <li><a href="#" class="text-[14px] font-medium text-black hover:text-black">NVIDIA</a></li>
+                    <li><a href="#" class="text-[14px] font-medium text-black hover:text-black">SAP</a></li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </li>
+
+        <li class="dr-nav-item flex items-center h-full">
+          <a href="#" class="dr-nav-link text-black text-sm font-medium h-full flex items-center relative no-underline tracking-tight px-1">Platform</a>
+          <div class="dr-megamenu-panel">
+            <div class="flex flex-col md:flex-row max-w-[1440px] mx-auto px-6 md:px-20 py-8 md:py-11 gap-8 md:gap-[60px]">
+              <div class="w-full md:w-[24%]">
+                <h3 class="font-semibold text-[15px]">Platform</h3>
+                <p class="text-sm text-gray-400">Lifecycle workbench for agentic automation.</p>
+              </div>
+              <div class="flex flex-col md:flex-row gap-8 md:gap-[85px]">
+                <div>
+                  <span class="text-[10.5px] font-semibold text-[#babcbe] tracking-wide mb-4 block uppercase">AI Platform</span>
+                  <ul class="flex flex-col gap-3">
+                    <li><a href="#" class="text-[14px] font-medium text-black hover:text-black">Agentic AI</a></li>
+                    <li><a href="#" class="text-[14px] font-medium text-black hover:text-black">Generative AI</a></li>
+                    <li><a href="#" class="text-[14px] font-medium text-black hover:text-black">Predictive AI</a></li>
+                    <li><a href="#" class="text-[14px] font-medium text-black hover:text-black">AI Governance</a></li>
+                    <li><a href="#" class="text-[14px] font-medium text-black hover:text-black">AI Observability</a></li>
+                    <li><a href="#" class="text-[14px] font-medium text-black hover:text-black">AI Foundation</a></li>
+                  </ul>
+                </div>
+                <div>
+                  <span class="text-[10.5px] font-semibold text-[#babcbe] tracking-wide mb-4 block uppercase">Open Source</span>
+                  <ul class="flex flex-col gap-3">
+                    <li><a href="#" class="text-[14px] font-medium text-black hover:text-black">Covalent</a></li>
+                    <li><a href="#" class="text-[14px] font-medium text-black hover:text-black">syftr</a></li>
+                  </ul>
+                </div>
+                <div>
+                  <span class="text-[10.5px] font-semibold text-[#babcbe] tracking-wide mb-4 block uppercase">Learn More</span>
+                  <ul class="flex flex-col gap-3">
+                    <li><a href="#" class="text-[14px] font-medium text-black hover:text-black">Integrations</a></li>
+                    <li><a href="#" class="text-[14px] font-medium text-black hover:text-black">Services</a></li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </li>
+
+        <li class="dr-nav-item flex items-center h-full">
+          <a href="#" class="dr-nav-link text-black text-sm font-medium h-full flex items-center relative no-underline tracking-tight px-1">Tech Partners</a>
+          <div class="dr-megamenu-panel">
+            <div class="flex flex-col md:flex-row max-w-[1440px] mx-auto px-6 md:px-20 py-8 md:py-11 gap-8 md:gap-[60px]">
+              <div class="w-full md:w-[24%]">
+                <h3 class="font-semibold text-[15px]">Tech Partners</h3>
+                <p class="text-sm text-gray-400">Native integrations with cloud leaders.</p>
+              </div>
+              <div class="flex flex-col md:flex-row gap-8 md:gap-[85px]">
+                <div>
+                  <span class="text-[10.5px] font-semibold text-[#babcbe] tracking-wide mb-4 block uppercase">Strategic Alignment</span>
+                  <ul class="flex flex-col gap-3">
+                    <li><a href="#" class="text-[14px] font-medium text-black hover:text-black">NVIDIA</a></li>
+                    <li><a href="#" class="text-[14px] font-medium text-black hover:text-black">Dell</a></li>
+                    <li><a href="#" class="text-[14px] font-medium text-black hover:text-black">Nebius</a></li>
+                    <li><a href="#" class="text-[14px] font-medium text-black hover:text-black">SAP</a></li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </li>
+
+        <li class="dr-nav-item flex items-center h-full">
+          <a href="#" class="dr-nav-link text-black text-sm font-medium h-full flex items-center relative no-underline tracking-tight px-1">Responsive Resources</a>
+          <div class="dr-megamenu-panel">
+            <div class="flex flex-col md:flex-row max-w-[1440px] mx-auto px-6 md:px-20 py-8 md:py-11 gap-8 md:gap-[60px]">
+              <div class="w-full md:w-[24%]">
+                <h3 class="font-semibold text-[15px]">Learning Center</h3>
+                <p class="text-sm text-gray-400">Access product insights, technical guides, and community support platforms.</p>
+              </div>
+              <div class="flex flex-col md:flex-row gap-8 md:gap-[65px]">
+                <div>
+                  <span class="text-[10.5px] font-semibold text-[#babcbe] tracking-wide mb-4 block uppercase">Watch</span>
+                  <ul class="flex flex-col gap-2.5">
+                    <li><a href="#" class="text-[14px] font-medium text-black hover:text-black">Demo Center</a></li>
+                    <li><a href="#" class="text-[14px] font-medium text-black hover:text-black">Webinars</a></li>
+                  </ul>
+                </div>
+                <div>
+                  <span class="text-[10.5px] font-semibold text-[#babcbe] tracking-wide mb-4 block uppercase">Read</span>
+                  <ul class="flex flex-col gap-2.5">
+                    <li><a href="#" class="text-[14px] font-medium text-black hover:text-black">Analyst Reports</a></li>
+                    <li><a href="blog.html" class="text-[14px] font-medium text-black hover:text-emerald-500 transition-colors">Blog</a></li>
+                    <li><a href="#" class="text-[14px] font-medium text-black hover:text-black">Customer Stories</a></li>
+                    <li><a href="#" class="text-[14px] font-medium text-black hover:text-black">Data Sheets</a></li>
+                  </ul>
+                </div>
+                <div>
+                  <span class="text-[10.5px] font-semibold text-[#babcbe] tracking-wide mb-4 block uppercase">Support</span>
+                  <ul class="flex flex-col gap-2.5">
+                    <li><a href="#" class="text-[14px] font-medium text-black hover:text-black">Documentation</a></li>
+                    <li><a href="#" class="text-[14px] font-medium text-black hover:text-black">Training</a></li>
+                    <li><a href="#" class="text-[14px] font-medium text-black hover:text-black">Support Portal</a></li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </li>
+
+        <li class="dr-nav-item flex items-center h-full">
+          <a href="#" class="dr-nav-link text-black text-sm font-medium h-full flex items-center relative no-underline tracking-tight px-1">About</a>
+          <div class="dr-megamenu-panel">
+            <div class="flex flex-col md:flex-row max-w-[1440px] mx-auto px-6 md:px-20 py-8 md:py-11 gap-8 md:gap-[60px]">
+              <div class="w-full md:w-[24%]">
+                <h3 class="font-semibold text-[15px]">Company</h3>
+                <p class="text-sm text-gray-400">Learn about our vision and corporate roadmap milestones.</p>
+              </div>
+              <div class="flex flex-col md:flex-row gap-8 md:gap-[85px]">
+                <div>
+                  <span class="text-[10.5px] font-semibold text-[#babcbe] tracking-wide mb-4 block uppercase">Corporate</span>
+                  <ul class="flex flex-col gap-3">
+                    <li><a href="#" class="text-[14px] font-medium text-black hover:text-black">Who We Are</a></li>
+                    <li><a href="#" class="text-[14px] font-medium text-black hover:text-black">Careers</a></li>
+                    <li><a href="#" class="text-[14px] font-medium text-black hover:text-black">Open Positions</a></li>
+                  </ul>
+                </div>
+                <div>
+                  <span class="text-[10.5px] font-semibold text-[#babcbe] tracking-wide mb-4 block uppercase">Relations</span>
+                  <ul class="flex flex-col gap-3">
+                    <li><a href="#" class="text-[14px] font-medium text-black hover:text-black">Newsroom</a></li>
+                    <li><a href="#" class="text-[14px] font-medium text-black hover:text-black">Find a Partner</a></li>
+                    <li><a href="#" class="text-[14px] font-medium text-black hover:text-black">Contact Us</a></li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </li>
+
+      </ul>
+
+      <div class="flex items-center gap-2 sm:gap-3">
+        <div class="relative inline-block text-left dr-location-wrapper font-sans antialiased text-[#070707]">
+          <button type="button" class="dr-location-btn w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center bg-white transition-all duration-200 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400" aria-haspopup="true" aria-expanded="false">
+            <svg class="w-[22px] h-[22px] text-gray-800" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="2" y1="12" x2="22" y2="12" />
+              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+            </svg>
+          </button>
+          <div class="dr-location-dropdown absolute left-0 mt-2 w-[180px] bg-white border border-gray-200 rounded-xl p-4 shadow-sm pointer-events-none opacity-0 scale-95 translate-y-[-4px] origin-top-left transition-[transform,opacity] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] z-50">
+            <span class="block text-[11px] font-mono tracking-[0.12em] text-gray-800 font-medium mb-3 uppercase">Location</span>
+            <div class="space-y-2">
+              <button class="w-full flex items-center gap-3 bg-[#e5e5e5] px-3 py-2.5 rounded-xl text-left text-base font-medium transition-colors duration-150">
+                <span class="w-4 h-4 bg-black rounded-full shrink-0"></span>
+                <span class="font-semibold tracking-wide">US</span>
+              </button>
+              <button class="w-full flex items-center gap-3 bg-white border border-gray-200 px-3 py-2.5 rounded-xl text-left text-base font-medium hover:bg-gray-50 transition-colors duration-150">
+                <span class="w-4 h-4 border border-gray-300 rounded-full shrink-0 bg-white"></span>
+                <span class="font-semibold tracking-wide">JP</span>
+              </button>
+            </div>
+          </div>
+        </div>
+        <a href="#" class="dr-btn-secondary-nav px-4 sm:px-[22px] h-10 sm:h-[42px] rounded-md border border-gray-200 text-sm font-semibold flex items-center bg-white text-black">Log In</a>
+        <a href="#" class="dr-btn-secondary-nav px-4 sm:px-[22px] h-10 sm:h-[42px] rounded-md border border-gray-200 text-sm font-semibold flex items-center bg-white text-black">Try</a>
+        <a href="#" class="px-4 sm:px-[22px] h-10 sm:h-[42px] rounded-md bg-[#61ffa6] text-black text-sm font-semibold flex items-center">Demo</a>
+        <button class="dr-menu-toggle hidden w-10 h-10 flex-col gap-[5px] items-center justify-center bg-transparent border-none rounded-xl hover:bg-gray-100">
+          <span class="w-[20px] h-0.5 bg-black rounded-sm"></span>
+          <span class="w-[20px] h-0.5 bg-black rounded-sm"></span>
+          <span class="w-[20px] h-0.5 bg-black rounded-sm"></span>
+        </button>
+      </div>
+    </nav>
+    <!-- ══ END NAVBAR ══ -->
+
+
+    <!-- ══════════════════════════════════════════════
+         PAGE HEADER
+    ══════════════════════════════════════════════ -->
+    <header class="w-full max-w-7xl mx-auto px-4 pt-10 sm:pt-14 sm:px-6 lg:px-8">
+      <div class="flex items-center gap-1.5 text-[10px] font-mono font-medium uppercase tracking-wider text-gray-400 mb-3">
+        <span class="w-2.5 h-1.5 bg-blue-400 rounded-sm inline-block"></span>
+        <a href="#" class="hover:text-black transition-colors">Resources</a>
+        <span>/</span>
+        <a href="blog.html" class="hover:text-black transition-colors">Blog</a>
+      </div>
+      <h1 class="text-3xl sm:text-4xl lg:text-[42px] font-bold tracking-tight text-black leading-tight max-w-4xl">
+        Build an agent that writes its own tools
+      </h1>
+    </header>
+
+    <!-- Colour bar -->
+    <div class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 my-6">
+      <div class="w-full h-[7px] flex gap-[2px] overflow-hidden">
+        <div class="bg-black w-[8%] h-full"></div>
+        <div class="bg-gray-400 w-[12%] h-full"></div>
+        <div class="bg-gray-800 w-[4%] h-full"></div>
+        <div class="bg-green-300 w-[15%] h-full"></div>
+        <div class="bg-yellow-300 w-[6%] h-full"></div>
+        <div class="bg-emerald-400 w-[9%] h-full"></div>
+        <div class="bg-blue-400 w-[5%] h-full"></div>
+        <div class="bg-blue-600 w-[12%] h-full"></div>
+        <div class="bg-purple-300 w-[8%] h-full"></div>
+        <div class="bg-gray-300 w-[10%] h-full"></div>
+        <div class="bg-teal-400 w-[11%] h-full"></div>
+      </div>
+    </div>
+
+
+    <!-- ══════════════════════════════════════════════
+         MAIN CONTENT
+    ══════════════════════════════════════════════ -->
+    <main class="w-full max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8 mb-20">
+      <!-- Two-column layout: article + sidebar -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-start">
+
+        <!-- ── ARTICLE ── -->
+        <div class="lg:col-span-8 space-y-12 prose-article">
+
+          <!-- Intro -->
+          <article class="space-y-5 pt-2">
+            <p class="italic text-gray-700">
+              The third post from Build Club, our weekly live build session. The companion GitHub repo can be
+              found <a href="#">here</a>, docs <a href="#">here</a> and you can try the agent live in the
+              <a href="#">hosted playground</a>.
+            </p>
+            <p>
+              Your agent framework is not the bottleneck. The bottleneck is that every new external system your
+              agent needs to talk to requires another tool wrapper, another MCP server, another item in a registry
+              that is always two steps behind the API it wraps.
+            </p>
+            <p>
+              The conventional model is "agent plus curated tool registry." It scales linearly with the number of
+              integrations your agent has to do, and the curation is permanent work. You ship a wrapper. The
+              vendor changes their endpoint. The wrapper drifts. The agent gets stuck. You ship another wrapper.
+            </p>
+            <p>
+              There is a pattern emerging in production that inverts this approach. The new model is "agent plus
+              secure sandbox plus raw API specs." The tools are not pre-built. The agent writes them on the fly,
+              using the spec as its only reference, runs them in a boundary you trust, and discards the ones that
+              turn out to be wrong. The framework's job is not to provide tools. The framework's job is to make
+              tool-authoring safe.
+            </p>
+            <p>
+              Luke Shulman, Director of Agent Innovation at DataRobot, walked through this pattern in a recent
+              Build Club session.
+            </p>
+            <p>
+              The audience picked the problem: <code>CODEOWNERS</code>
+              hygiene in the DataRobot monorepo. Every monorepo of meaningful age accumulates this kind of drift as teams
+              reorganize, get renamed, or get absorbed. Files end up annotated with aliases that no longer point anywhere.
+              The cleanup is mechanical, tedious, and a good first target for an agent. A member of the platform team
+              surfaced it as the build target: scan the repo, find files owned by teams that no longer exist, propose
+              reassignments, open the PR.
+            </p>
+            <p>
+              Luke built it live, in an hour, on a modest 35B-parameter model. He did not pre-build a single tool. The
+              agent wrote them.
+            </p>
+          </article>
+
+          <!-- Pipeline diagram section -->
+          <section class="space-y-6 pt-6 border-t border-gray-100">
+            <!-- Scrollable pipeline diagram -->
+            <div class="code-block-wrap w-full bg-[#12161a] rounded-sm border border-gray-800">
+              <div class="min-w-[680px] h-32 flex items-center justify-between text-gray-400 text-xs font-mono px-4">
+                <div class="border border-gray-700 bg-[#1a2026] p-2.5 rounded-sm whitespace-nowrap">[nl-agent] LLM Blueprint</div>
+                <div class="text-gray-600">&rarr;</div>
+                <div class="border border-gray-700 bg-[#1a2026] p-2.5 rounded-sm whitespace-nowrap">[nl-agent] Custom Model</div>
+                <div class="text-gray-600">&rarr;</div>
+                <div class="border border-blue-500 bg-[#1d2733] p-2.5 rounded-sm text-blue-400 whitespace-nowrap">[context-agent] Registered Model</div>
+                <div class="text-gray-600">&rarr;</div>
+                <div class="border border-purple-500 bg-[#241e30] p-2.5 rounded-sm text-purple-400 whitespace-nowrap">[context-agent] Deployment</div>
+              </div>
+            </div>
+
+            <p class="text-sm font-medium text-gray-500 italic">This post is the recipe.</p>
+
+            <h2>What a Natural Language agent does</h2>
+
+            <!-- Playground UI mock -->
+            <div class="code-block-wrap w-full bg-[#0d1117] rounded-md border border-gray-800 font-mono text-[13px]">
+              <div class="bg-[#161b22] px-4 py-2 flex items-center justify-between border-b border-gray-800">
+                <div class="flex items-center gap-2">
+                  <span class="w-3 h-3 rounded-full bg-red-500/80 inline-block"></span>
+                  <span class="w-3 h-3 rounded-full bg-yellow-500/80 inline-block"></span>
+                  <span class="w-3 h-3 rounded-full bg-green-500/80 inline-block"></span>
+                  <span class="text-gray-400 text-xs ml-2">context-agent / playground</span>
+                </div>
+                <span class="text-[11px] text-green-400 flex items-center gap-1">
+                  <span class="w-1.5 h-1.5 rounded-full bg-green-400 inline-block animate-pulse"></span> Getting Started &rarr;
+                </span>
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-gray-800" style="min-height:10rem;">
+                <div class="p-4 space-y-2 text-gray-300">
+                  <div class="text-gray-500 text-xs flex justify-between flex-wrap gap-1"><span>EXPLORER</span> <span>SystemPrompt.md *</span></div>
+                  <p class="text-gray-400 mt-4 text-xs sm:text-[13px] break-words">Go and fetch <span class="text-blue-400 underline break-all">https://openlibrary.org/dev/docs/api/authors</span> — I'd like to use this api to understand the works of my favorite authors.</p>
+                </div>
+                <div class="p-4 bg-[#090d13] flex flex-col justify-between">
+                  <div class="text-[11px] uppercase tracking-wider text-gray-500 font-bold">Agent Chat</div>
+                  <div class="mt-auto pt-4 border-t border-gray-800/60 flex items-center justify-between flex-wrap gap-2">
+                    <span class="text-gray-500 italic text-xs">Review system prompt and let's try some connectivity|</span>
+                    <span class="text-[11px] text-gray-400 bg-gray-800 px-1.5 py-0.5 rounded-sm whitespace-nowrap">Read-only mode</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <p class="text-sm font-medium text-gray-500 italic">Luke's NL agent authoring its first tool against the GitHub OpenAPI spec.</p>
+
+            <p>
+              Luke calls this pattern a Natural language (NL) agent, also referred to as a
+              <a href="#">context-agent</a>.
+            </p>
+            <p>
+              The framing matters because it inverts where your engineering effort goes. In the conventional
+              setup, you spend your time on the tool registry. In an NL agent, you spend your time on the sandbox.
+            </p>
+            <p>
+              The agent runs in a Deno-based JavaScript VM with a restricted directory, a restricted network
+              allowlist, and a restricted set of environment variables. JavaScript is the right execution surface for
+              this because the entire browser ecosystem is built on running untrusted JavaScript safely. Deno
+              tightens that further with explicit permissions for file, network, and environment access.
+            </p>
+            <p>
+              The agent gets eight tools to start:
+              <code>cat</code>, <code>find</code>, <code>grep</code>, <code>tree</code>,
+              <code>write</code>, <code>search-and-replace</code>, <code>mkdir</code>, and
+              <code>execute_code</code>. Everything else, the agent has to author itself. The <code>execute_code</code> tool is the unlock. The
+              agent reads a markdown system prompt, reads any reference docs in its directory, and starts
+              writing JavaScript functions to talk to the external system. It tries them. It fixes them when they fail.
+              The functions it keeps get saved as a tools.js file in the working directory. The next time the agent
+              loads, those tools are already there.
+            </p>
+            <p>
+              The asymmetry is favorable. Setup is short. The infrastructure is small. The agent does the
+              integration work itself against a spec that is, by definition, more complete than any wrapper anyone
+              was going to maintain. You do not have to be ahead of the agent's needs. The spec already is.
+            </p>
+          </section>
+
+          <!-- Step-by-step build -->
+          <section class="space-y-10 pt-6 border-t border-gray-100">
+            <h2>Building a self-building agent</h2>
+            <p>
+              Everything below assumes you have the NL agent runtime (open-sourced at
+              <a href="#">github.com/kindofluke/context-agent</a>) and a
+              <a href="#">DataRobot account</a>. If you would rather see the
+              pattern before you build, the <a href="#">hosted playground</a> runs the agent live in your browser against a
+              sample knowledge base.
+            </p>
+
+            <!-- Step 1 -->
+            <div class="space-y-4">
+              <h3>Step 1: Set up the directory and sandbox</h3>
+              <div class="code-block-wrap w-full bg-[#1c1f24] rounded-md border border-gray-800">
+                <div class="bg-[#24292e] px-4 py-1.5 flex items-center justify-between text-xs text-gray-400 flex-wrap gap-1">
+                  <span class="font-mono">~/Projects/random_agents/ (-zsh)</span>
+                  <span class="font-mono">luke.shulman@lshulman-mb-M4KNW</span>
+                </div>
+                <div class="p-4 space-y-1 text-xs font-mono text-gray-300">
+                  <p><span class="text-emerald-400">&bull; ~/Projects/random_agents/</span> mkdir github-code-owners</p>
+                  <p><span class="text-emerald-400">&bull; ~/Projects/random_agents/</span> cd github-code-owners</p>
+                  <p><span class="text-emerald-400">&bull; ~/Projects/random_agents/github-code-owners/</span> nvim<span class="bg-white text-black animate-pulse px-0.5"> </span></p>
+                </div>
+              </div>
+              <p>
+                Create a fresh working directory. This is the only place the agent can read or write. Configure the
+                Deno sandbox to allow only .js and .md file types within that directory. Configure the network
+                allowlist to permit only the domains you want the agent to hit. For this build, that meant
+                api.github.com and nothing else.
+              </p>
+              <p>
+                This is the load-bearing step. If you give an agent the ability to write code without a safe place to run
+                it, you get either a refusal-prone agent or a security incident. The framework's value is the sandbox,
+                not the agent loop.
+              </p>
+            </div>
+
+            <!-- Step 2 -->
+            <div class="space-y-4">
+              <h3>Step 2: Drop in the OpenAPI spec as context</h3>
+              <p>
+                Download the <a href="#">GitHub OpenAPI spec</a> and put it in the agent's directory as github-openapi.yaml. Do
+                not write a wrapper. Do not pre-author tools. The spec is all the context the agent needs.
+              </p>
+              <div class="code-block-wrap w-full bg-[#1e1e24] rounded-md p-4 text-xs font-mono text-gray-400 border border-gray-800 space-y-1 max-h-44 overflow-y-auto">
+                <p class="text-gray-500"># github_openapi.yaml</p>
+                <p><span class="text-purple-400">openapi</span>: 3.1.0</p>
+                <p><span class="text-purple-400">info</span>:</p>
+                <p>&nbsp;&nbsp;<span class="text-purple-400">version</span>: 1.1.4</p>
+                <p>&nbsp;&nbsp;<span class="text-purple-400">title</span>: GitHub v3 REST API</p>
+                <p>&nbsp;&nbsp;<span class="text-purple-400">description</span>: GitHub's v3 REST API.</p>
+                <p><span class="text-purple-400">paths</span>:</p>
+                <p>&nbsp;&nbsp;<span class="text-purple-400">/repos/{'{'}owner{'}'}/{'{'}repo{'}'}/contents/{'{'}path{'}'}</span>:</p>
+                <p>&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-purple-400">get</span>:</p>
+                <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-purple-400">summary</span>: Get repository content</p>
+              </div>
+              <p class="text-sm font-medium text-gray-500 italic">Overview of the agent's directory and context during the build.</p>
+              <p>
+                This is the move that gets the most pushback and is the most important. The conventional instinct is
+                to write a thin client around the API and hand the agent the client. The NL pattern is to hand the
+                agent the spec and let it write its own thin client, only for the endpoints it actually ends up needing.
+                Most wrappers cover surface area that never gets used.
+              </p>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="space-y-4">
+              <h3>Step 3: Generate a fine-grained token as a prefixed env var</h3>
+              <div class="w-full border border-gray-200 bg-[#fafafa] p-5 sm:p-6 rounded-sm text-sm space-y-3">
+                <span class="text-xs uppercase font-mono tracking-wider text-gray-400 font-bold block">GitHub Developer Settings Mock Configuration</span>
+                <p class="font-bold text-black">New fine-grained personal access token</p>
+                <div class="space-y-1">
+                  <label class="text-xs font-semibold text-gray-600 block">Token name *</label>
+                  <input type="text" disabled value="GH for Buildclub" class="w-full max-w-sm border border-gray-300 bg-white px-3 py-1.5 rounded-sm text-black text-xs font-mono" />
+                </div>
+                <div class="flex flex-wrap items-center gap-4 text-xs font-mono pt-2 text-gray-500">
+                  <span>Resource Owner: <strong class="text-black">datarobot</strong></span>
+                  <span>Expiration: <strong class="text-black">30 days (Jun 07, 2026)</strong></span>
+                </div>
+              </div>
+              <p>
+                Generate a GitHub fine-grained personal access token scoped to <code>Contents: read</code> and
+                <code>Pull requests: write</code> for the target repo. Minimum required scope, nothing more.
+              </p>
+              <p>
+                The NL runtime exposes environment variables to the agent only when they carry a specific prefix
+                (<code>NL_</code> in Luke's setup). Anything without the prefix is invisible to the agent. This is how you stop it from
+                accidentally reading credentials it has no business reading. Set <code>NL_GITHUB_TOKEN=&lt;your_pat&gt;</code> and the
+                agent will pick it up. Anything else in your shell stays out of reach.
+              </p>
+            </div>
+
+            <!-- Step 4 -->
+            <div class="space-y-4">
+              <h3>Step 4: Give the agent a small, scoped first task</h3>
+              <p>
+                In the chat interface, tell the agent what it has access to and ask it to confirm connectivity. The first
+                thing it will do is author a probe tool, five or ten lines of JavaScript that hits the rate-limit endpoint.
+                When that works, give it the real task: "find every file in the monorepo owned by @datarobot/cloud-operations in the <code>DR_CODEOWNERS</code> file."
+              </p>
+              <div class="w-full border border-gray-200 rounded-sm p-4 sm:p-5 space-y-4 bg-[#fcfcfc] text-sm">
+                <div class="flex items-center gap-2 text-xs text-gray-400 font-mono">
+                  <span class="w-2 h-2 rounded-full bg-purple-500 inline-block"></span>
+                  <span>Chatbot / Agent Generated Output Response</span>
+                </div>
+                <p class="text-gray-700 font-medium">Excellent idea! I'll create a tool to search for any @datarobot team in the DR_CODEOWNERS file and return relevant ownership information.</p>
+                <div class="code-block-wrap">
+                  <pre class="bg-gray-900 text-purple-300 p-4 rounded-sm text-xs font-mono leading-relaxed overflow-x-auto">async () => {
+  const constCODEOWNERS = await Deno.readTextFile('DR_CODEOWNERS.txt');
+  const allTeams = new Set();
+  // Extract all @datarobot teams from DR_CODEOWNERS
+  const teamRegex = /@datarobot\/[\w\-]+/g;
+  const matches = constCODEOWNERS.match(teamRegex);
+  return Array.from(allTeams).sort();
+}</pre>
+                </div>
+              </div>
+              <p>
+                The agent's first move was to author a tool it named <code>getCodeownersFiles</code>. About twenty lines. It
+                walked the repo via the GitHub API, parsed <code>CODEOWNERS</code> patterns, and returned a list.
+              </p>
+              <p>
+                It ran the tool, got back the list, and then, without being asked, wrote a second tool to persist the list
+                as a <code>cloud-ops-inventory.txt</code> file in its directory. The agent figured out on its own that a file makes a
+                perfectly good working memory. The tools-as-emergent-memory pattern fell out of the runtime
+                without anyone designing for it.
+              </p>
+            </div>
+
+            <!-- Step 5 -->
+            <div class="space-y-4">
+              <h3>Step 5: Add a scope-discipline system prompt</h3>
+              <p>
+                The agent's default behavior is to do too much. Before you let it propose changes to the repo, give it
+                a system prompt that draws a hard line around what it can modify:
+              </p>
+              <blockquote>
+                The <code>CODEOWNERS</code> guidelines only update <code>CODEOWNERS</code> references. Do not modify real running code. Only open PRs. Be safe.
+              </blockquote>
+              <p>
+                That sentence stops the agent from "helpfully" refactoring code while it is in the file. Scope
+                discipline matters more than capability when you are handing an agent write access to a
+                production repo. From there, the agent worked through the inventory file by file, proposing
+                reassignments where the git history made the new owner obvious and flagging the rest for human
+                review. The PR-creation step stayed in the loop with a human reviewer, which is the right answer for
+                a first pass.
+              </p>
+            </div>
+
+            <!-- Step 6 -->
+            <div class="space-y-4">
+              <h3>Step 6: Lock the agent into read-only mode</h3>
+              <p>
+                Once the agent has authored the tools that work, flip the runtime into read-only mode. The agent
+                can still call its existing tools, read files, and execute the JavaScript it already wrote. It cannot write
+                new tools. It cannot rewrite its system prompt. The agent is now an artifact.
+              </p>
+              <p>
+                The tools.js and the markdown system prompt are the entire deliverable. Drop them into the
+                DataRobot registry and workshop as a custom model, and you have a deployable, governed agent
+                with a fully visible code surface. The exploration phase needs write access. The production phase
+                does not.
+              </p>
+            </div>
+          </section>
+
+          <!-- Takeaways -->
+          <section class="space-y-6 pt-6 border-t border-gray-100">
+            <h2>What this Build Club session taught us</h2>
+            <p>
+              The session was scheduled as a wild card. It turned into the cleanest internal argument we have had about what an agent platform should ship. Three takeaways.
+            </p>
+            <p>
+              <strong class="font-bold text-black">Context is what you ship.</strong> A complete, well-structured spec for an external API outperforms a hand-rolled tool wrapped around the same API, because the spec preserves optionality the wrapper has already discarded. The implication is uncomfortable for product teams: the highest-leverage thing you can ship for the agentic era is not a new SDK or a new tool registry. It is excellent, copy-as-markdown documentation. The "copy page as markdown" button some open source projects have started adding is not a UX flourish. It is a deliberate concession to the fact that the reader is, increasingly, an agent. Make your docs loadable. Publish your OpenAPI specs. Keep them current. The agents will take it from there.
+            </p>
+            <p>
+              <strong class="font-bold text-black">The sandbox is the unlock, not the loop.</strong> Most agent frameworks compete on orchestration, memory, and planning. The thing that decides whether the NL pattern is shippable is none of those. It is whether you can give the agent a place to execute code that you actually trust. Deno's permission model does most of the work here. Restricted file types, restricted directories, restricted network egress, prefixed env vars. None of it is exotic. All of it has to be in place before the agent loop matters.
+            </p>
+            <p>
+              <strong class="font-bold text-black">Best-in-class context beats best-in-class frameworks.</strong> The agents that work in production are not the ones with the most elaborate orchestration. They are the ones with the cleanest, most loadable, most agent-friendly documentation around them. Every minute spent on better markdown is worth ten minutes spent on a more sophisticated agent framework. Most teams have the priorities inverted, and the cost shows up as agents that look impressive in demos and fall over in deployment.
+            </p>
+          </section>
+
+          <!-- Try it / Get started -->
+          <section class="space-y-8 pt-6 border-t border-gray-100">
+            <div>
+              <h2>Try it yourself</h2>
+              <p>
+                Build Club runs weekly. Each session takes one volunteer driver, one hour, and an idea voted on by the audience. The format is deliberately unrehearsed: we build live, the build breaks live, and we fix it live. If you are building on DataRobot or thinking about enterprise-ready agents and want inspiration, this is the series for it.
+              </p>
+            </div>
+            <div>
+              <h2>Get started</h2>
+              <ul class="space-y-4 mt-4">
+                <li class="flex items-start gap-3">
+                  <span class="inline-block w-2.5 h-1 bg-black mt-[11px] shrink-0"></span>
+                  <span>NL agent runtime (open source): <a href="https://github.com/kindofluke/context-agent">github.com/kindofluke/context-agent</a></span>
+                </li>
+                <li class="flex items-start gap-3">
+                  <span class="inline-block w-2.5 h-1 bg-black mt-[11px] shrink-0"></span>
+                  <span>DataRobot recipe wrapper: <a href="https://github.com/amberb617/recipe-context-agent">github.com/amberb617/recipe-context-agent</a></span>
+                </li>
+                <li class="flex items-start gap-3">
+                  <span class="inline-block w-2.5 h-1 bg-black mt-[11px] shrink-0"></span>
+                  <span>Try the agent live: <a href="#">hosted playground</a></span>
+                </li>
+                <li class="flex items-start gap-3">
+                  <span class="inline-block w-2.5 h-1 bg-black mt-[11px] shrink-0"></span>
+                  <span>Concept site: <a href="https://agents.earlgreys.tech">agents.earlgreys.tech</a></span>
+                </li>
+                <li class="flex items-start gap-3">
+                  <span class="inline-block w-2.5 h-1 bg-black mt-[11px] shrink-0"></span>
+                  <span>DataRobot's Official GitHub: <a href="https://github.com/datarobot-oss/datarobot-agent-skills">datarobot-oss/datarobot-agent-skills</a></span>
+                </li>
+                <li class="flex items-start gap-3">
+                  <span class="inline-block w-2.5 h-1 bg-black mt-[11px] shrink-0"></span>
+                  <span>Part one of this series: <a href="https://www.datarobot.com/blog/agent-build-club/">datarobot.com/blog/agent-build-club/</a></span>
+                </li>
+                <li class="flex items-start gap-3">
+                  <span class="inline-block w-2.5 h-1 bg-black mt-[11px] shrink-0"></span>
+                  <span>Join the conversation in the <a href="#">DataRobot Slack community</a></span>
+                </li>
+              </ul>
+            </div>
+          </section>
+
+          <!-- Related posts -->
+          <section class="pt-8 border-t border-gray-100">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+              <h2 class="text-2xl sm:text-3xl font-bold tracking-tight text-black m-0">Related posts</h2>
+              <a href="#" class="inline-block text-xs font-medium bg-[#EDEDED] text-black px-4 py-2.5 rounded hover:bg-gray-200 transition-colors duration-200 self-start sm:self-auto whitespace-nowrap">
+                See other posts in AI for Practitioners
+              </a>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <article class="related-card flex flex-col justify-between bg-[#EFEFEF] p-6 min-h-[260px] sm:min-h-[320px] cursor-pointer">
+                <div>
+                  <span class="inline-block bg-black text-white text-[10px] tracking-widest font-bold uppercase px-2 py-0.5 mb-4">Blog</span>
+                  <h3 class="text-lg sm:text-xl font-normal leading-snug tracking-tight text-gray-900">
+                    How to build a digital twin agent (with guardrails)
+                  </h3>
+                </div>
+                <div class="flex items-center gap-2 text-[11px] font-mono tracking-wider text-gray-700 uppercase mt-6">
+                  <span class="inline-block w-2.5 h-1 bg-black shrink-0"></span>
+                  <span>June 2, 2026</span>
+                  <span class="text-gray-400">|</span>
+                  <span>7 Min Read</span>
+                </div>
+              </article>
+              <article class="related-card flex flex-col justify-between bg-[#EFEFEF] p-6 min-h-[260px] sm:min-h-[320px] cursor-pointer">
+                <div>
+                  <span class="inline-block bg-black text-white text-[10px] tracking-widest font-bold uppercase px-2 py-0.5 mb-4">Blog</span>
+                  <h3 class="text-lg sm:text-xl font-normal leading-snug tracking-tight text-gray-900">
+                    How to design and run an agent in rehearsal – before building it
+                  </h3>
+                </div>
+                <div class="flex items-center gap-2 text-[11px] font-mono tracking-wider text-gray-700 uppercase mt-6">
+                  <span class="inline-block w-2.5 h-1 bg-black shrink-0"></span>
+                  <span>April 2, 2026</span>
+                  <span class="text-gray-400">|</span>
+                  <span>5 Min Read</span>
+                </div>
+              </article>
+            </div>
+          </section>
+
+        </div><!-- end article col -->
+
+        <!-- ── SIDEBAR ── -->
+        <aside class="lg:col-span-4 space-y-8 lg:sticky lg:top-[96px] order-first lg:order-last">
+
+          <!-- Authors -->
+          <div class="border-t border-gray-200 pt-5">
+            <h3 class="text-[17px] font-bold text-black mb-3">Authors</h3>
+            <div class="bg-[#f4f4f4] rounded-sm p-5 sm:p-6">
+              <p class="text-[15px] font-bold text-black mb-3">by Amber Bennoui, Luke Shulman</p>
+              <div class="flex flex-wrap items-center gap-2 text-[9.5px] font-mono text-gray-500 uppercase tracking-wider font-bold">
+                <span class="w-1.5 h-3 bg-black inline-block"></span>
+                <span>June 4, 2026</span>
+                <span>|</span>
+                <span>8 Min Read</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Share -->
+          <div class="border-t border-gray-200 pt-5">
+            <h3 class="text-[17px] font-bold text-black mb-3">Share this resource</h3>
+            <div class="bg-[#f4f4f4] rounded-sm p-5 sm:p-6 flex items-center gap-2.5">
+              <a href="#" class="w-7 h-7 rounded-full bg-black flex items-center justify-center hover:opacity-80 transition-opacity">
+                <span class="text-[11px] font-bold text-white mb-0.5">in</span>
+              </a>
+              <a href="#" class="w-7 h-7 rounded-full bg-black flex items-center justify-center hover:opacity-80 transition-opacity">
+                <span class="text-[9px] text-white font-bold">𝕏</span>
+              </a>
+              <a href="#" class="w-7 h-7 rounded-full bg-black flex items-center justify-center hover:opacity-80 transition-opacity">
+                <span class="text-[11px] text-white">&#9993;</span>
+              </a>
+            </div>
+          </div>
+
+          <div class="border-t border-gray-200 pt-5">
+  <h3 class="text-[17px] font-bold text-black mb-4">Latest Posts</h3>
+  <div class="space-y-4">
+
+    <a href="#" class="block bg-[#f4f4f4] p-5 sm:p-6 rounded-sm group hover:bg-[#A3B1FF] hover:shadow-sm transition-all duration-200">
+      <div class="inline-block bg-black text-white text-[9px] font-mono font-bold px-2 py-0.5 tracking-wider mb-4">AI FOR PRACTITIONERS</div>
+      <h4 class="text-[16px] sm:text-[18px] font-bold text-black leading-snug tracking-tight mb-4 sm:mb-5">
+        How to build a digital twin agent (with guardrails)
+      </h4>
+      <div class="flex flex-wrap items-center gap-2 text-[9.5px] font-mono text-gray-500 uppercase tracking-wider font-bold">
+        <span class="w-1.5 h-3 bg-black inline-block"></span>
+        <span>June 2, 2026</span>
+        <span>|</span>
+        <span>7 Min Read</span>
+      </div>
+    </a>
+
+    <a href="#" class="block bg-[#f4f4f4] p-5 sm:p-6 rounded-sm group hover:bg-[#A3B1FF] hover:shadow-sm transition-all duration-200">
+      <div class="inline-block bg-black text-white text-[9px] font-mono font-bold px-2 py-0.5 tracking-wider mb-4">AI FOR PRACTITIONERS</div>
+      <h4 class="text-[16px] sm:text-[18px] font-bold text-black leading-snug tracking-tight mb-4 sm:mb-5">
+        Industry-standard LLM benchmarks in DataRobot
+      </h4>
+      <div class="flex flex-wrap items-center gap-2 text-[9.5px] font-mono text-gray-500 uppercase tracking-wider font-bold">
+        <span class="w-1.5 h-3 bg-black inline-block"></span>
+        <span>May 27, 2026</span>
+        <span>|</span>
+        <span>8 Min Read</span>
+      </div>
+    </a>
+
+    <a href="#" class="block bg-[#f4f4f4] p-5 sm:p-6 rounded-sm group hover:bg-[#A3B1FF] hover:shadow-sm transition-all duration-200">
+      <div class="inline-block bg-black text-white text-[9px] font-mono font-bold px-2 py-0.5 tracking-wider mb-4">INSIDE THE PRODUCT</div>
+      <h4 class="text-[16px] sm:text-[18px] font-bold text-black leading-snug tracking-tight mb-4 sm:mb-5">
+        A practical guide for platform teams managing shared AI deployments
+      </h4>
+      <div class="flex flex-wrap items-center gap-2 text-[9.5px] font-mono text-gray-500 uppercase tracking-wider font-bold">
+        <span class="w-1.5 h-3 bg-black inline-block"></span>
+        <span>May 22, 2026</span>
+        <span>|</span>
+        <span>8 Min Read</span>
+      </div>
+    </a>
+
+  </div>
+</div>
+
+        </aside>
+      </div>
+    </main>
+
+
+    <!-- ══════════════════════════════════════════════
+         CTA SECTION
+    ══════════════════════════════════════════════ -->
+    <section class="w-full bg-white px-5 sm:px-8 md:px-10 py-12 md:py-20">
+      <div class="max-w-[1200px] mx-auto bg-[#61ffa6] p-8 sm:p-12 md:p-[72px_64px] rounded-2xl">
+        <div class="flex flex-col gap-6 md:gap-8">
+          <h2 class="text-3xl sm:text-4xl md:text-5xl lg:text-[56px] font-medium leading-tight">
+            Realize Value from AI, Fast.<br class="hidden sm:block" /> Get Started Today.
+          </h2>
+          <div>
+            <a href="#" class="btn-cta-dark inline-flex items-center justify-center bg-black h-11 sm:h-12 px-5 sm:px-7 rounded-md">
+              <span class="btn-text text-white text-sm font-semibold">Try it for yourself</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ══════════════════════════════════════════════
+         FOOTER — exact from index.html
+    ══════════════════════════════════════════════ -->
+    <footer class="w-full bg-black px-6 md:px-16 py-12 md:py-20 border-t border-neutral-900 font-sans selection:bg-neutral-800">
+      <div class="max-w-[1540px] mx-auto flex flex-col xl:flex-row gap-16 xl:gap-24 justify-between items-start">
+
+        <div class="flex items-center gap-3 shrink-0">
+          <img src="./Prustaz_logo_white.png" alt="Prustaz Logo" class="h-9 w-auto object-contain block" />
+          <span class="text-2xl font-semibold tracking-tight text-white select-none">Prustaz</span>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-x-10 gap-y-12 w-full">
+
+          <div class="flex flex-col">
+            <h3 class="text-white text-[15px] font-bold border-b border-neutral-800 pb-2 mb-4 tracking-tight">Why Prustaz</h3>
+            <span class="text-[10px] font-bold tracking-wider text-neutral-500 uppercase mb-3">Discover</span>
+            <ul class="space-y-3 mb-6">
+              <li><a href="#" class="text-white text-[14px] font-medium hover:text-neutral-300 transition-colors">AI Leaders</a></li>
+              <li><a href="#" class="text-white text-[14px] font-medium hover:text-neutral-300 transition-colors">AI Practitioners</a></li>
+            </ul>
+            <span class="text-[10px] font-bold tracking-wider text-neutral-500 uppercase mb-3">Validation</span>
+            <ul class="space-y-3 mb-6">
+              <li><a href="#" class="text-white text-[14px] font-medium hover:text-neutral-300 transition-colors">Awards and Recognition</a></li>
+              <li><a href="#" class="text-white text-[14px] font-medium hover:text-neutral-300 transition-colors">Customers</a></li>
+            </ul>
+            <span class="text-[10px] font-bold tracking-wider text-neutral-500 uppercase mb-3">Enterprise AI Suite</span>
+            <ul class="space-y-3">
+              <li><a href="#" class="text-white text-[14px] font-medium hover:text-neutral-300 transition-colors">AI Apps & Agents</a></li>
+              <li><a href="#" class="text-white text-[14px] font-medium hover:text-neutral-300 transition-colors">Agentic AI Platform</a></li>
+            </ul>
+          </div>
+
+          <div class="flex flex-col">
+            <h3 class="text-white text-[15px] font-bold border-b border-neutral-800 pb-2 mb-4 tracking-tight">Solutions</h3>
+            <span class="text-[10px] font-bold tracking-wider text-neutral-500 uppercase mb-3">Department</span>
+            <ul class="space-y-3 mb-6">
+              <li><a href="#" class="text-white text-[14px] font-medium hover:text-neutral-300 transition-colors">Finance</a></li>
+              <li><a href="#" class="text-white text-[14px] font-medium hover:text-neutral-300 transition-colors">Supply Chain & Operations</a></li>
+            </ul>
+            <span class="text-[10px] font-bold tracking-wider text-neutral-500 uppercase mb-3">Purpose-Built</span>
+            <ul class="space-y-3 mb-6">
+              <li><a href="#" class="text-white text-[14px] font-medium hover:text-neutral-300 transition-colors">Government</a></li>
+              <li><a href="#" class="text-white text-[14px] font-medium hover:text-neutral-300 transition-colors">Oil and Gas</a></li>
+              <li><a href="#" class="text-white text-[14px] font-medium hover:text-neutral-300 transition-colors">Life Sciences</a></li>
+              <li><a href="#" class="text-white text-[14px] font-medium hover:text-neutral-300 transition-colors">Financial Services</a></li>
+              <li><a href="#" class="text-white text-[14px] font-medium hover:text-neutral-300 transition-colors">Manufacturing</a></li>
+            </ul>
+            <span class="text-[10px] font-bold tracking-wider text-neutral-500 uppercase mb-3">Co-Engineered</span>
+            <ul class="space-y-3">
+              <li><a href="#" class="text-white text-[14px] font-medium hover:text-neutral-300 transition-colors">NVIDIA</a></li>
+              <li><a href="#" class="text-white text-[14px] font-medium hover:text-neutral-300 transition-colors">SAP</a></li>
+            </ul>
+          </div>
+
+          <div class="flex flex-col">
+            <h3 class="text-white text-[15px] font-bold border-b border-neutral-800 pb-2 mb-4 tracking-tight">Platform</h3>
+            <span class="text-[10px] font-bold tracking-wider text-neutral-500 uppercase mb-3">AI Platform</span>
+            <ul class="space-y-3 mb-6">
+              <li><a href="#" class="text-white text-[14px] font-medium hover:text-neutral-300 transition-colors">Agentic AI</a></li>
+              <li><a href="#" class="text-white text-[14px] font-medium hover:text-neutral-300 transition-colors">Generative AI</a></li>
+              <li><a href="#" class="text-white text-[14px] font-medium hover:text-neutral-300 transition-colors">Predictive AI</a></li>
+              <li><a href="#" class="text-white text-[14px] font-medium hover:text-neutral-300 transition-colors">AI Governance</a></li>
+              <li><a href="#" class="text-white text-[14px] font-medium hover:text-neutral-300 transition-colors">AI Observability</a></li>
+              <li><a href="#" class="text-white text-[14px] font-medium hover:text-neutral-300 transition-colors">AI Foundation</a></li>
+            </ul>
+            <span class="text-[10px] font-bold tracking-wider text-neutral-500 uppercase mb-3">Open Source</span>
+            <ul class="space-y-3 mb-6">
+              <li><a href="#" class="text-white text-[14px] font-medium hover:text-neutral-300 transition-colors">Covalent</a></li>
+              <li><a href="#" class="text-white text-[14px] font-medium hover:text-neutral-300 transition-colors">syftr</a></li>
+            </ul>
+            <span class="text-[10px] font-bold tracking-wider text-neutral-500 uppercase mb-3">Learn More</span>
+            <ul class="space-y-3">
+              <li><a href="#" class="text-white text-[14px] font-medium hover:text-neutral-300 transition-colors">Integrations</a></li>
+              <li><a href="#" class="text-white text-[14px] font-medium hover:text-neutral-300 transition-colors">Services</a></li>
+            </ul>
+          </div>
+
+          <div class="flex flex-col">
+            <h3 class="text-white text-[15px] font-bold border-b border-neutral-800 pb-2 mb-4 tracking-tight">Tech Partners</h3>
+            <span class="text-[10px] font-bold tracking-wider text-neutral-500 uppercase mb-3">Co-Engineered</span>
+            <ul class="space-y-3">
+              <li><a href="#" class="text-white text-[14px] font-medium hover:text-neutral-300 transition-colors">NVIDIA</a></li>
+              <li><a href="#" class="text-white text-[14px] font-medium hover:text-neutral-300 transition-colors">Dell</a></li>
+              <li><a href="#" class="text-white text-[14px] font-medium hover:text-neutral-300 transition-colors">Nebius</a></li>
+              <li><a href="#" class="text-white text-[14px] font-medium hover:text-neutral-300 transition-colors">SAP</a></li>
+            </ul>
+          </div>
+
+          <div class="flex flex-col">
+            <h3 class="text-white text-[15px] font-bold border-b border-neutral-800 pb-2 mb-4 tracking-tight">Resources</h3>
+            <span class="text-[10px] font-bold tracking-wider text-neutral-500 uppercase mb-3">Watch</span>
+            <ul class="space-y-3 mb-6">
+              <li><a href="#" class="text-white text-[14px] font-medium hover:text-neutral-300 transition-colors">Demo Center</a></li>
+              <li><a href="#" class="text-white text-[14px] font-medium hover:text-neutral-300 transition-colors">Webinars</a></li>
+            </ul>
+            <span class="text-[10px] font-bold tracking-wider text-neutral-500 uppercase mb-3">Read</span>
+            <ul class="space-y-3 mb-6">
+              <li><a href="#" class="text-white text-[14px] font-medium hover:text-neutral-300 transition-colors">Analyst Reports</a></li>
+              <li><a href="#" class="text-white text-[14px] font-medium hover:text-neutral-300 transition-colors">Blog</a></li>
+              <li><a href="#" class="text-white text-[14px] font-medium hover:text-neutral-300 transition-colors">Customer Stories</a></li>
+              <li><a href="#" class="text-white text-[14px] font-medium hover:text-neutral-300 transition-colors">Data Sheets</a></li>
+              <li><a href="#" class="text-white text-[14px] font-medium hover:text-neutral-300 transition-colors">eBooks</a></li>
+              <li><a href="#" class="text-white text-[14px] font-medium hover:text-neutral-300 transition-colors">White Papers</a></li>
+            </ul>
+            <span class="text-[10px] font-bold tracking-wider text-neutral-500 uppercase mb-3">Connect</span>
+            <ul class="space-y-3 mb-6">
+              <li><a href="#" class="text-white text-[14px] font-medium hover:text-neutral-300 transition-colors">Events</a></li>
+              <li><a href="#" class="text-white text-[14px] font-medium hover:text-neutral-300 transition-colors">Agents in the AM</a></li>
+            </ul>
+            <span class="text-[10px] font-bold tracking-wider text-neutral-500 uppercase mb-3">Support</span>
+            <ul class="space-y-3 mb-6">
+              <li><a href="#" class="text-white text-[14px] font-medium hover:text-neutral-300 transition-colors">Documentation</a></li>
+              <li><a href="#" class="text-white text-[14px] font-medium hover:text-neutral-300 transition-colors">Training</a></li>
+              <li><a href="#" class="text-white text-[14px] font-medium hover:text-neutral-300 transition-colors">Support</a></li>
+            </ul>
+            <span class="text-[10px] font-bold tracking-wider text-neutral-500 uppercase mb-3">Learn More</span>
+            <ul class="space-y-3">
+              <li><a href="#" class="text-white text-[14px] font-medium hover:text-neutral-300 transition-colors">All Resources</a></li>
+            </ul>
+          </div>
+
+          <div class="flex flex-col">
+            <h3 class="text-white text-[15px] font-bold border-b border-neutral-800 pb-2 mb-4 tracking-tight">About</h3>
+            <span class="text-[10px] font-bold tracking-wider text-neutral-500 uppercase mb-3">Company</span>
+            <ul class="space-y-3 mb-6">
+              <li><a href="#" class="text-white text-[14px] font-medium hover:text-neutral-300 transition-colors">Who We Are</a></li>
+              <li><a href="#" class="text-white text-[14px] font-medium hover:text-neutral-300 transition-colors">Careers</a></li>
+              <li><a href="#" class="text-white text-[14px] font-medium hover:text-neutral-300 transition-colors">Open Positions</a></li>
+              <li><a href="#" class="text-white text-[14px] font-medium hover:text-neutral-300 transition-colors">Contact Us</a></li>
+            </ul>
+            <span class="text-[10px] font-bold tracking-wider text-neutral-500 uppercase mb-3">Press</span>
+            <ul class="space-y-3 mb-6">
+              <li><a href="#" class="text-white text-[14px] font-medium hover:text-neutral-300 transition-colors">Newsroom</a></li>
+            </ul>
+            <span class="text-[10px] font-bold tracking-wider text-neutral-500 uppercase mb-3">Partners</span>
+            <ul class="space-y-3 mb-8">
+              <li><a href="#" class="text-white text-[14px] font-medium hover:text-neutral-300 transition-colors">Find a Partner</a></li>
+              <li><a href="#" class="text-white text-[14px] font-medium hover:text-neutral-300 transition-colors">Partner Portal</a></li>
+            </ul>
+            <span class="text-[10px] font-bold tracking-wider text-neutral-500 uppercase mb-3 block">Connect With Us</span>
+            <div class="flex items-center gap-4 mt-2 text-neutral-400">
+              <a href="#" class="hover:text-white transition-colors">
+                <svg class="h-4 w-4 fill-current" viewBox="0 0 24 24"><path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.32 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.79M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z"/></svg>
+              </a>
+              <a href="#" class="hover:text-white transition-colors">
+                <svg class="h-4 w-4 fill-current" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+              </a>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </footer>
+
+    <!-- Bottom bar -->
+    <div class="w-full bg-[#050505] px-6 md:px-16 py-6 md:py-8 border-t border-[#111]">
+      <div class="max-w-[1540px] mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+        <div class="flex flex-wrap gap-6 items-center justify-center">
+          <nav class="flex gap-6">
+            <a href="#" class="text-white text-[10px] md:text-[11px] font-semibold underline">LEGAL</a>
+            <a href="#" class="text-white text-[10px] md:text-[11px] font-semibold underline">PRIVACY</a>
+            <a href="#" class="text-white text-[10px] md:text-[11px] font-semibold underline">TRUST</a>
+          </nav>
+          <span class="text-white text-[10px] md:text-[11px] font-medium text-center">COPYRIGHT © 2026 PRUSTAZ, INC. - ALL RIGHTS RESERVED</span>
+        </div>
+        <div class="flex flex-wrap gap-1 items-center h-5">
+          <span class="block w-3 h-full bg-gray-700"></span>
+          <span class="block w-2 h-full bg-gray-500"></span>
+          <span class="block w-2 h-full bg-gray-300"></span>
+          <span class="block w-1 h-full bg-green-200"></span>
+          <span class="block w-1 h-full bg-green-300"></span>
+          <span class="block w-1 h-full bg-green-400"></span>
+          <span class="block w-1 h-full bg-yellow-200"></span>
+          <span class="block w-1 h-full bg-yellow-300"></span>
+          <span class="block w-1 h-full bg-teal-400"></span>
+          <span class="block w-2 h-full bg-blue-400"></span>
+          <span class="block w-3 h-full bg-blue-500"></span>
+          <span class="block w-2 h-full bg-purple-400"></span>
+          <span class="block w-3 h-full bg-purple-500"></span>
+          <span class="block w-3 h-full bg-sky-300"></span>
+          <span class="block w-4 h-full bg-sky-400"></span>
+          <span class="block w-8 h-full bg-cyan-400"></span>
+          <span class="block flex-grow h-full bg-[#61ffa6]"></span>
+        </div>
+      </div>
+    </div>
+    <!-- ══ END FOOTER ══ -->
+
+
+    <!-- ══════════════════════════════════════════════
+         SCRIPTS — exact from index.html
+    ══════════════════════════════════════════════ -->
+    <script>
+      (function () {
+        const toggle = document.querySelector(".dr-menu-toggle");
+        if (!toggle) return;
+
+        const overlay = document.createElement("div");
+        overlay.className = "dr-mobile-overlay fixed inset-0 bg-white z-[9999] overflow-y-auto hidden [&.active]:block font-sans antialiased text-[#070707]";
+
+        overlay.innerHTML = `
+  <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+    <div class="flex items-center gap-2">
+      <img src="./Prustaz_logo_dark.png" alt="Prustaz Logo" class="h-10 w-auto object-contain" />
+    </div>
+    <button class="close-mobile p-2 text-black hover:bg-gray-100 rounded-full transition-colors" aria-label="Close Menu">
+      <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+      </svg>
+    </button>
+  </div>
+  <div class="px-6 py-4">
+    <div class="flex items-center gap-3 mb-6">
+      <div class="relative flex-1">
+        <input type="text" placeholder="Search" class="w-full bg-gray-50 border border-gray-300 rounded-md py-2.5 pl-4 pr-10 text-base placeholder-gray-500 focus:outline-none focus:border-black focus:ring-1 focus:ring-black" />
+      </div>
+      <button class="p-2.5 border border-gray-300 rounded-full hover:bg-gray-50 transition-colors" aria-label="Languages">
+        <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>
+        </svg>
+      </button>
+    </div>
+    <nav class="space-y-1">
+      <div class="dr-menu-item group border-b border-gray-100">
+        <button class="dr-accordion-trigger w-full flex items-center justify-between py-4 text-[17px] font-medium text-left hover:text-black">
+          <span>Why Prustaz</span>
+          <svg class="w-4 h-4 text-gray-500 transform transition-transform duration-200 group-[.open]:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </button>
+        <div class="dr-accordion-content hidden group-[.open]:block pl-4 pb-4 space-y-4 text-base">
+          <div><span class="text-[10px] font-bold tracking-wider text-gray-400 uppercase block mb-1.5">Discover</span><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">AI Leaders</a><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">AI Practitioners</a></div>
+          <div><span class="text-[10px] font-bold tracking-wider text-gray-400 uppercase block mb-1.5">Validation</span><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Awards and Recognition</a><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Customers</a></div>
+          <div><span class="text-[10px] font-bold tracking-wider text-gray-400 uppercase block mb-1.5">Enterprise AI Suite</span><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">AI Apps & Agents</a><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Agentic AI Platform</a></div>
+        </div>
+      </div>
+      <div class="dr-menu-item group border-b border-gray-100">
+        <button class="dr-accordion-trigger w-full flex items-center justify-between py-4 text-[17px] font-medium text-left hover:text-black">
+          <span>Solutions</span>
+          <svg class="w-4 h-4 text-gray-500 transform transition-transform duration-200 group-[.open]:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </button>
+        <div class="dr-accordion-content hidden group-[.open]:block pl-4 pb-4 space-y-4 text-base">
+          <div><span class="text-[10px] font-bold tracking-wider text-gray-400 uppercase block mb-1.5">Department</span><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Finance</a><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Supply Chain & Operations</a></div>
+          <div><span class="text-[10px] font-bold tracking-wider text-gray-400 uppercase block mb-1.5">Purpose-Built</span><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Government</a><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Oil and Gas</a><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Life Sciences</a><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Financial Services</a><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Manufacturing</a></div>
+          <div><span class="text-[10px] font-bold tracking-wider text-gray-400 uppercase block mb-1.5">Co-Engineered</span><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">NVIDIA</a><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">SAP</a></div>
+        </div>
+      </div>
+      <div class="dr-menu-item group border-b border-gray-100">
+        <button class="dr-accordion-trigger w-full flex items-center justify-between py-4 text-[17px] font-medium text-left hover:text-black">
+          <span>Platform</span>
+          <svg class="w-4 h-4 text-gray-500 transform transition-transform duration-200 group-[.open]:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </button>
+        <div class="dr-accordion-content hidden group-[.open]:block pl-4 pb-4 space-y-4 text-base">
+          <div><span class="text-[10px] font-bold tracking-wider text-gray-400 uppercase block mb-1.5">AI Platform</span><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Agentic AI</a><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Generative AI</a><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Predictive AI</a><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">AI Governance</a><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">AI Observability</a><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">AI Foundation</a></div>
+          <div><span class="text-[10px] font-bold tracking-wider text-gray-400 uppercase block mb-1.5">Open Source</span><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Covalent</a><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">syftr</a></div>
+          <div><span class="text-[10px] font-bold tracking-wider text-gray-400 uppercase block mb-1.5">Learn More</span><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Integrations</a><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Services</a></div>
+        </div>
+      </div>
+      <div class="dr-menu-item group border-b border-gray-100">
+        <button class="dr-accordion-trigger w-full flex items-center justify-between py-4 text-[17px] font-medium text-left hover:text-black">
+          <span>Tech Partners</span>
+          <svg class="w-4 h-4 text-gray-500 transform transition-transform duration-200 group-[.open]:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </button>
+        <div class="dr-accordion-content hidden group-[.open]:block pl-4 pb-4 space-y-4 text-base">
+          <div><span class="text-[10px] font-bold tracking-wider text-gray-400 uppercase block mb-1.5">Co-Engineered</span><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">NVIDIA</a><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Dell</a><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Nebius</a><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">SAP</a></div>
+        </div>
+      </div>
+      <div class="dr-menu-item group border-b border-gray-100">
+        <button class="dr-accordion-trigger w-full flex items-center justify-between py-4 text-[17px] font-medium text-left hover:text-black">
+          <span>Resources</span>
+          <svg class="w-4 h-4 text-gray-500 transform transition-transform duration-200 group-[.open]:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </button>
+        <div class="dr-accordion-content hidden group-[.open]:block pl-4 pb-4 space-y-4 text-base">
+          <div><span class="text-[10px] font-bold tracking-wider text-gray-400 uppercase block mb-1.5">Watch</span><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Demo Center</a><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Webinars</a></div>
+          <div><span class="text-[10px] font-bold tracking-wider text-gray-400 uppercase block mb-1.5">Read</span><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Analyst Reports</a><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Blog</a><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Customer Stories</a><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Data Sheets</a><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">eBooks</a><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">White Papers</a></div>
+          <div><span class="text-[10px] font-bold tracking-wider text-gray-400 uppercase block mb-1.5">Support</span><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Documentation</a><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Training</a><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Support</a></div>
+          <div><span class="text-[10px] font-bold tracking-wider text-gray-400 uppercase block mb-1.5">Learn More</span><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">All Resources</a></div>
+        </div>
+      </div>
+      <div class="dr-menu-item group border-b border-gray-100">
+        <button class="dr-accordion-trigger w-full flex items-center justify-between py-4 text-[17px] font-medium text-left hover:text-black">
+          <span>About</span>
+          <svg class="w-4 h-4 text-gray-500 transform transition-transform duration-200 group-[.open]:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </button>
+        <div class="dr-accordion-content hidden group-[.open]:block pl-4 pb-4 space-y-4 text-base">
+          <div><span class="text-[10px] font-bold tracking-wider text-gray-400 uppercase block mb-1.5">Company</span><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Who We Are</a><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Careers</a><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Open Positions</a><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Contact Us</a></div>
+          <div><span class="text-[10px] font-bold tracking-wider text-gray-400 uppercase block mb-1.5">Press</span><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Newsroom</a></div>
+          <div><span class="text-[10px] font-bold tracking-wider text-gray-400 uppercase block mb-1.5">Partners</span><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Find a Partner</a><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Partner Portal</a></div>
+        </div>
+      </div>
+    </nav>
+    <div class="mt-8 flex flex-wrap gap-3">
+      <a href="#" class="flex-1 min-w-[120px] py-3 text-center text-sm font-medium border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">Log In</a>
+      <a href="#" class="flex-1 min-w-[150px] py-3 text-center text-sm font-medium border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">Try Prustaz</a>
+    </div>
+    <div class="mt-3">
+      <a href="#" class="block w-fit px-6 py-3 text-center text-sm font-semibold bg-[#61ffa6] text-black rounded-md hover:bg-[#4ee693] transition-colors">Request a Demo</a>
+    </div>
+  </div>`;
+
+        document.body.appendChild(overlay);
+
+        const closeBtn = overlay.querySelector(".close-mobile");
+
+        overlay.querySelectorAll(".dr-accordion-trigger").forEach((trigger) => {
+          trigger.addEventListener("click", () => {
+            const currentItem = trigger.closest(".dr-menu-item");
+            const isOpen = currentItem.classList.contains("open");
+            overlay.querySelectorAll(".dr-menu-item").forEach((item) => item.classList.remove("open"));
+            if (!isOpen) { currentItem.classList.add("open"); }
+          });
+        });
+
+        const closeMenu = () => { overlay.classList.remove("active"); document.body.style.overflow = ""; };
+
+        toggle.addEventListener("click", () => { overlay.classList.add("active"); document.body.style.overflow = "hidden"; });
+        closeBtn?.addEventListener("click", closeMenu);
+        overlay.querySelectorAll(".dr-accordion-content a").forEach((a) => { a.addEventListener("click", closeMenu); });
+        window.addEventListener("resize", () => { if (window.innerWidth > 1024 && overlay.classList.contains("active")) { closeMenu(); } });
+      })();
+    </script>
+
+    <script>
+      (function () {
+        const container = document.querySelector(".dr-location-wrapper");
+        if (!container) return;
+        const btn = container.querySelector(".dr-location-btn");
+        const dropdown = container.querySelector(".dr-location-dropdown");
+
+        function toggleDropdown() {
+          const isExpanded = btn.getAttribute("aria-expanded") === "true";
+          if (!isExpanded) {
+            dropdown.classList.remove("pointer-events-none", "opacity-0", "scale-95", "translate-y-[-4px]");
+            dropdown.classList.add("pointer-events-auto", "opacity-100", "scale-100", "translate-y-0");
+            btn.setAttribute("aria-expanded", "true");
+          } else { closeDropdown(); }
+        }
+        function closeDropdown() {
+          dropdown.classList.remove("pointer-events-auto", "opacity-100", "scale-100", "translate-y-0");
+          dropdown.classList.add("pointer-events-none", "opacity-0", "scale-95", "translate-y-[-4px]");
+          btn.setAttribute("aria-expanded", "false");
+        }
+
+        btn.addEventListener("click", (e) => { e.stopPropagation(); toggleDropdown(); });
+        document.addEventListener("click", (e) => { if (!container.contains(e.target)) { closeDropdown(); } });
+        document.addEventListener("keydown", (e) => { if (e.key === "Escape") { closeDropdown(); } });
+      })();
+    </script>
+
+  </body>
+</html>
