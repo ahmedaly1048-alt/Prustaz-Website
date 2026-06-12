@@ -104,9 +104,9 @@
          NAVBAR — exact from index.html
     ══════════════════════════════════════════════ -->
     <nav class="flex items-center justify-between px-4 sm:px-6 lg:px-8 h-[76px] sticky top-0 z-[1000] border-b  border-[#4de893]" style="background-color: var(--genai-green);">
-      <div class="flex items-center gap-2.5 cursor-pointer select-none">
+      <a href="index.html" class="flex items-center gap-2.5 cursor-pointer select-none no-underline shrink-0">
         <img src="./Prustaz_logo_dark.png" alt="Logo" class="h-[50px] sm:h-[60px] w-auto object-contain block" />
-      </div>
+      </a>
 
       <ul class="dr-nav-menu-desktop flex items-center list-none gap-4 lg:gap-6 h-full">
 
@@ -627,12 +627,17 @@
         if (!toggle) return;
 
         const overlay = document.createElement("div");
-        overlay.className = "dr-mobile-overlay fixed inset-0 bg-white z-[9999] overflow-y-auto hidden [&.active]:block font-sans antialiased text-[#070707]";
+        overlay.className =
+          "dr-mobile-overlay fixed inset-0 bg-white z-[9999] overflow-y-auto hidden [&.active]:block font-sans antialiased text-[#070707]";
 
         overlay.innerHTML = `
   <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
     <div class="flex items-center gap-2">
-      <img src="./Prustaz_logo_dark.png" alt="Prustaz Logo" class="h-10 w-auto object-contain" />
+      <img 
+        src="./Prustaz_logo_dark.png" 
+        alt="Prustaz Logo" 
+        class="h-10 w-auto object-contain"
+      />
     </div>
     <button class="close-mobile p-2 text-black hover:bg-gray-100 rounded-full transition-colors" aria-label="Close Menu">
       <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -640,6 +645,7 @@
       </svg>
     </button>
   </div>
+
   <div class="px-6 py-4">
     <div class="flex items-center gap-3 mb-6">
       <div class="relative flex-1">
@@ -651,55 +657,167 @@
         </svg>
       </button>
     </div>
+
     <nav class="space-y-1">
-      <div class="dr-menu-item group border-b border-gray-100">
-        <button class="dr-accordion-trigger w-full flex items-center justify-between py-4 text-[17px] font-medium text-left hover:text-black"><span>Why Prustaz</span><svg class="w-4 h-4 text-gray-500 transform transition-transform duration-200 group-[.open]:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button>
-        <div class="dr-accordion-content hidden group-[.open]:block pl-4 pb-4 space-y-4 text-base">
-          <div><span class="text-[10px] font-bold tracking-wider text-gray-400 uppercase block mb-1.5">Discover</span><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">AI Leaders</a><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">AI Practitioners</a></div>
-          <div><span class="text-[10px] font-bold tracking-wider text-gray-400 uppercase block mb-1.5">Validation</span><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Awards and Recognition</a><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Customers</a></div>
-          <div><span class="text-[10px] font-bold tracking-wider text-gray-400 uppercase block mb-1.5">Enterprise AI Suite</span><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">AI Apps & Agents</a><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Agentic AI Platform</a></div>
+      <div class="dr-menu-item group border-b border-gray-100 last:border-0">
+        <button class="dr-accordion-trigger w-full flex items-center justify-between py-4 text-[17px] font-medium text-left transition-colors hover:text-black">
+          <span>Why Prustaz</span>
+          <svg class="w-4 h-4 text-gray-500 transform transition-transform duration-200 group-[.open]:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </button>
+        <div class="dr-accordion-content hidden group-[.open]:block pl-4 pb-4 space-y-4 text-gray-600 text-base">
+          <div>
+            <span class="text-[10px] font-bold tracking-wider text-gray-400 uppercase block mb-1.5">Discover</span>
+            <a href="#" class="block py-1 font-medium text-black hover:text-gray-600">AI Leaders</a>
+            <a href="#" class="block py-1 font-medium text-black hover:text-gray-600">AI Practitioners</a>
+          </div>
+          <div>
+            <span class="text-[10px] font-bold tracking-wider text-gray-400 uppercase block mb-1.5">Validation</span>
+            <a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Awards and Recognition</a>
+            <a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Customers</a>
+          </div>
+          <div>
+            <span class="text-[10px] font-bold tracking-wider text-gray-400 uppercase block mb-1.5">Enterprise AI Suite</span>
+            <a href="#" class="block py-1 font-medium text-black hover:text-gray-600">AI Apps & Agents</a>
+            <a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Agentic AI Platform</a>
+          </div>
         </div>
       </div>
-      <div class="dr-menu-item group border-b border-gray-100">
-        <button class="dr-accordion-trigger w-full flex items-center justify-between py-4 text-[17px] font-medium text-left hover:text-black"><span>Solutions</span><svg class="w-4 h-4 text-gray-500 transform transition-transform duration-200 group-[.open]:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button>
-        <div class="dr-accordion-content hidden group-[.open]:block pl-4 pb-4 space-y-4 text-base">
-          <div><span class="text-[10px] font-bold tracking-wider text-gray-400 uppercase block mb-1.5">Department</span><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Finance</a><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Supply Chain & Operations</a></div>
-          <div><span class="text-[10px] font-bold tracking-wider text-gray-400 uppercase block mb-1.5">Purpose-Built</span><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Government</a><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Oil and Gas</a><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Life Sciences</a><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Financial Services</a><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Manufacturing</a></div>
-          <div><span class="text-[10px] font-bold tracking-wider text-gray-400 uppercase block mb-1.5">Co-Engineered</span><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">NVIDIA</a><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">SAP</a></div>
+
+      <div class="dr-menu-item group border-b border-gray-100 last:border-0">
+        <button class="dr-accordion-trigger w-full flex items-center justify-between py-4 text-[17px] font-medium text-left transition-colors hover:text-black">
+          <span>Solutions</span>
+          <svg class="w-4 h-4 text-gray-500 transform transition-transform duration-200 group-[.open]:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </button>
+        <div class="dr-accordion-content hidden group-[.open]:block pl-4 pb-4 space-y-4 text-gray-600 text-base">
+          <div>
+            <span class="text-[10px] font-bold tracking-wider text-gray-400 uppercase block mb-1.5">Department</span>
+            <a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Finance</a>
+            <a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Supply Chain & Operations</a>
+          </div>
+          <div>
+            <span class="text-[10px] font-bold tracking-wider text-gray-400 uppercase block mb-1.5">Purpose-Built</span>
+            <a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Government</a>
+            <a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Oil and Gas</a>
+            <a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Life Sciences</a>
+            <a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Financial Services</a>
+            <a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Manufacturing</a>
+          </div>
+          <div>
+            <span class="text-[10px] font-bold tracking-wider text-gray-400 uppercase block mb-1.5">Co-Engineered</span>
+            <a href="#" class="block py-1 font-medium text-black hover:text-gray-600">NVIDIA</a>
+            <a href="#" class="block py-1 font-medium text-black hover:text-gray-600">SAP</a>
+          </div>
         </div>
       </div>
-      <div class="dr-menu-item group border-b border-gray-100">
-        <button class="dr-accordion-trigger w-full flex items-center justify-between py-4 text-[17px] font-medium text-left hover:text-black"><span>Platform</span><svg class="w-4 h-4 text-gray-500 transform transition-transform duration-200 group-[.open]:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button>
-        <div class="dr-accordion-content hidden group-[.open]:block pl-4 pb-4 space-y-4 text-base">
-          <div><span class="text-[10px] font-bold tracking-wider text-gray-400 uppercase block mb-1.5">AI Platform</span><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Agentic AI</a><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Generative AI</a><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Predictive AI</a><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">AI Governance</a><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">AI Observability</a><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">AI Foundation</a></div>
-          <div><span class="text-[10px] font-bold tracking-wider text-gray-400 uppercase block mb-1.5">Open Source</span><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Covalent</a><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">syftr</a></div>
-          <div><span class="text-[10px] font-bold tracking-wider text-gray-400 uppercase block mb-1.5">Learn More</span><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Integrations</a><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Services</a></div>
+
+      <div class="dr-menu-item group border-b border-gray-100 last:border-0">
+        <button class="dr-accordion-trigger w-full flex items-center justify-between py-4 text-[17px] font-medium text-left transition-colors hover:text-black">
+          <span>Platform</span>
+          <svg class="w-4 h-4 text-gray-500 transform transition-transform duration-200 group-[.open]:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </button>
+        <div class="dr-accordion-content hidden group-[.open]:block pl-4 pb-4 space-y-4 text-gray-600 text-base">
+          <div>
+            <span class="text-[10px] font-bold tracking-wider text-gray-400 uppercase block mb-1.5">AI Platform</span>
+            <a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Agentic AI</a>
+            <a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Generative AI</a>
+            <a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Predictive AI</a>
+            <a href="#" class="block py-1 font-medium text-black hover:text-gray-600">AI Governance</a>
+            <a href="#" class="block py-1 font-medium text-black hover:text-gray-600">AI Observability</a>
+            <a href="#" class="block py-1 font-medium text-black hover:text-gray-600">AI Foundation</a>
+          </div>
+          <div>
+            <span class="text-[10px] font-bold tracking-wider text-gray-400 uppercase block mb-1.5">Open Source</span>
+            <a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Covalent</a>
+            <a href="#" class="block py-1 font-medium text-black hover:text-gray-600">syftr</a>
+          </div>
+          <div>
+            <span class="text-[10px] font-bold tracking-wider text-gray-400 uppercase block mb-1.5">Learn More</span>
+            <a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Integrations</a>
+            <a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Services</a>
+          </div>
         </div>
       </div>
-      <div class="dr-menu-item group border-b border-gray-100">
-        <button class="dr-accordion-trigger w-full flex items-center justify-between py-4 text-[17px] font-medium text-left hover:text-black"><span>Tech Partners</span><svg class="w-4 h-4 text-gray-500 transform transition-transform duration-200 group-[.open]:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button>
-        <div class="dr-accordion-content hidden group-[.open]:block pl-4 pb-4 space-y-4 text-base">
-          <div><span class="text-[10px] font-bold tracking-wider text-gray-400 uppercase block mb-1.5">Co-Engineered</span><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">NVIDIA</a><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Dell</a><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Nebius</a><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">SAP</a></div>
+
+      <div class="dr-menu-item group border-b border-gray-100 last:border-0">
+        <button class="dr-accordion-trigger w-full flex items-center justify-between py-4 text-[17px] font-medium text-left transition-colors hover:text-black">
+          <span>Tech Partners</span>
+          <svg class="w-4 h-4 text-gray-500 transform transition-transform duration-200 group-[.open]:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </button>
+        <div class="dr-accordion-content hidden group-[.open]:block pl-4 pb-4 space-y-4 text-gray-600 text-base">
+          <div>
+            <span class="text-[10px] font-bold tracking-wider text-gray-400 uppercase block mb-1.5">Co-Engineered</span>
+            <a href="#" class="block py-1 font-medium text-black hover:text-gray-600">NVIDIA</a>
+            <a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Dell</a>
+            <a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Nebius</a>
+            <a href="#" class="block py-1 font-medium text-black hover:text-gray-600">SAP</a>
+          </div>
         </div>
       </div>
-      <div class="dr-menu-item group border-b border-gray-100">
-        <button class="dr-accordion-trigger w-full flex items-center justify-between py-4 text-[17px] font-medium text-left hover:text-black"><span>Resources</span><svg class="w-4 h-4 text-gray-500 transform transition-transform duration-200 group-[.open]:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button>
-        <div class="dr-accordion-content hidden group-[.open]:block pl-4 pb-4 space-y-4 text-base">
-          <div><span class="text-[10px] font-bold tracking-wider text-gray-400 uppercase block mb-1.5">Watch</span><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Demo Center</a><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Webinars</a></div>
-          <div><span class="text-[10px] font-bold tracking-wider text-gray-400 uppercase block mb-1.5">Read</span><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Analyst Reports</a><a href="blog.html" class="block py-1 font-medium text-black hover:text-gray-600">Blog</a><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Customer Stories</a><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Data Sheets</a></div>
-          <div><span class="text-[10px] font-bold tracking-wider text-gray-400 uppercase block mb-1.5">Support</span><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Documentation</a><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Training</a><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Support</a></div>
-          <div><span class="text-[10px] font-bold tracking-wider text-gray-400 uppercase block mb-1.5">Learn More</span><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">All Resources</a></div>
+
+      <div class="dr-menu-item group border-b border-gray-100 last:border-0">
+        <button class="dr-accordion-trigger w-full flex items-center justify-between py-4 text-[17px] font-medium text-left transition-colors hover:text-black">
+          <span>Resources</span>
+          <svg class="w-4 h-4 text-gray-500 transform transition-transform duration-200 group-[.open]:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </button>
+        <div class="dr-accordion-content hidden group-[.open]:block pl-4 pb-4 space-y-4 text-gray-600 text-base">
+          <div>
+            <span class="text-[10px] font-bold tracking-wider text-gray-400 uppercase block mb-1.5">Watch</span>
+            <a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Demo Center</a>
+            <a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Webinars</a>
+          </div>
+          <div>
+            <span class="text-[10px] font-bold tracking-wider text-gray-400 uppercase block mb-1.5">Read</span>
+            <a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Analyst Reports</a>
+            <a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Blog</a>
+            <a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Customer Stories</a>
+            <a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Data Sheets</a>
+            <a href="#" class="block py-1 font-medium text-black hover:text-gray-600">eBooks</a>
+            <a href="#" class="block py-1 font-medium text-black hover:text-gray-600">White Papers</a>
+          </div>
+          <div>
+            <span class="text-[10px] font-bold tracking-wider text-gray-400 uppercase block mb-1.5">Connect</span>
+            <a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Events</a>
+            <a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Agents in the AM</a>
+          </div>
+          <div>
+            <span class="text-[10px] font-bold tracking-wider text-gray-400 uppercase block mb-1.5">Support</span>
+            <a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Documentation</a>
+            <a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Training</a>
+            <a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Support</a>
+          </div>
+          <div>
+            <span class="text-[10px] font-bold tracking-wider text-gray-400 uppercase block mb-1.5">Learn More</span>
+            <a href="#" class="block py-1 font-medium text-black hover:text-gray-600">All Resources</a>
+          </div>
         </div>
       </div>
-      <div class="dr-menu-item group border-b border-gray-100">
-        <button class="dr-accordion-trigger w-full flex items-center justify-between py-4 text-[17px] font-medium text-left hover:text-black"><span>About</span><svg class="w-4 h-4 text-gray-500 transform transition-transform duration-200 group-[.open]:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button>
-        <div class="dr-accordion-content hidden group-[.open]:block pl-4 pb-4 space-y-4 text-base">
-          <div><span class="text-[10px] font-bold tracking-wider text-gray-400 uppercase block mb-1.5">Company</span><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Who We Are</a><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Careers</a><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Open Positions</a><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Contact Us</a></div>
-          <div><span class="text-[10px] font-bold tracking-wider text-gray-400 uppercase block mb-1.5">Press</span><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Newsroom</a></div>
-          <div><span class="text-[10px] font-bold tracking-wider text-gray-400 uppercase block mb-1.5">Partners</span><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Find a Partner</a><a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Partner Portal</a></div>
+
+      <div class="dr-menu-item group border-b border-gray-100 last:border-0">
+        <button class="dr-accordion-trigger w-full flex items-center justify-between py-4 text-[17px] font-medium text-left transition-colors hover:text-black">
+          <span>About</span>
+          <svg class="w-4 h-4 text-gray-500 transform transition-transform duration-200 group-[.open]:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </button>
+        <div class="dr-accordion-content hidden group-[.open]:block pl-4 pb-4 space-y-4 text-gray-600 text-base">
+          <div>
+            <span class="text-[10px] font-bold tracking-wider text-gray-400 uppercase block mb-1.5">Company</span>
+            <a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Who We Are</a>
+            <a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Careers</a>
+            <a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Open Positions</a>
+            <a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Contact Us</a>
+          </div>
+          <div>
+            <span class="text-[10px] font-bold tracking-wider text-gray-400 uppercase block mb-1.5">Press</span>
+            <a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Newsroom</a>
+          </div>
+          <div>
+            <span class="text-[10px] font-bold tracking-wider text-gray-400 uppercase block mb-1.5">Partners</span>
+            <a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Find a Partner</a>
+            <a href="#" class="block py-1 font-medium text-black hover:text-gray-600">Partner Portal</a>
+          </div>
         </div>
       </div>
     </nav>
+
     <div class="mt-8 flex flex-wrap gap-3">
       <a href="#" class="flex-1 min-w-[120px] py-3 text-center text-sm font-medium border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">Log In</a>
       <a href="#" class="flex-1 min-w-[150px] py-3 text-center text-sm font-medium border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">Try Prustaz</a>
@@ -707,7 +825,8 @@
     <div class="mt-3">
       <a href="#" class="block w-fit px-6 py-3 text-center text-sm font-semibold bg-[#61ffa6] text-black rounded-md hover:bg-[#4ee693] transition-colors">Request a Demo</a>
     </div>
-  </div>`;
+  </div>
+`;
 
         document.body.appendChild(overlay);
 
@@ -718,17 +837,36 @@
             const currentItem = trigger.closest(".dr-menu-item");
             const isOpen = currentItem.classList.contains("open");
             overlay.querySelectorAll(".dr-menu-item").forEach((item) => item.classList.remove("open"));
-            if (!isOpen) { currentItem.classList.add("open"); }
+            if (!isOpen) {
+              currentItem.classList.add("open");
+            }
           });
         });
 
-        const closeMenu = () => { overlay.classList.remove("active"); document.body.style.overflow = ""; };
-        toggle.addEventListener("click", () => { overlay.classList.add("active"); document.body.style.overflow = "hidden"; });
+        const closeMenu = () => {
+          overlay.classList.remove("active");
+          document.body.style.overflow = "";
+        };
+
+        toggle.addEventListener("click", () => {
+          overlay.classList.add("active");
+          document.body.style.overflow = "hidden";
+        });
+
         closeBtn?.addEventListener("click", closeMenu);
-        overlay.querySelectorAll(".dr-accordion-content a").forEach((a) => { a.addEventListener("click", closeMenu); });
-        window.addEventListener("resize", () => { if (window.innerWidth > 1024 && overlay.classList.contains("active")) { closeMenu(); } });
+
+        overlay.querySelectorAll(".dr-accordion-content a").forEach((a) => {
+          a.addEventListener("click", closeMenu);
+        });
+
+        window.addEventListener("resize", () => {
+          if (window.innerWidth > 1024 && overlay.classList.contains("active")) {
+            closeMenu();
+          }
+        });
       })();
     </script>
+
 
     <script>
       (function () {
