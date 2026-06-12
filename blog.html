@@ -75,12 +75,12 @@
         pointer-events: none;
         z-index: 999;
       }
-      .dr-nav-item:hover .dr-megamenu-panel {
+      /* .dr-nav-item:hover .dr-megamenu-panel {
         opacity: 1;
         visibility: visible;
         transform: translateY(0);
         pointer-events: auto;
-      }
+      } */
 
       /* Active nav underline */
       .dr-nav-item.active .dr-nav-link::after {
@@ -204,8 +204,9 @@
   <body class="font-sans bg-white text-black antialiased">
     <!-- ===== NAVBAR ===== -->
     <nav
-      class="flex items-center justify-between bg-white px-4 sm:px-6 lg:px-8 h-[76px] sticky top-0 z-[1000] border-b border-gray-100"
-    >
+  class="flex items-center justify-between bg-white h-[76px] sticky top-0 z-[1000] border-b border-gray-100"
+>
+  <div class="flex items-center justify-between w-full max-w-[1440px] mx-auto px-4 md:px-12">
       <a
         href="index.html"
         class="flex items-center gap-2.5 cursor-pointer select-none no-underline shrink-0"
@@ -507,11 +508,12 @@
           <span class="w-[20px] h-0.5 bg-black rounded-sm"></span>
         </button>
       </div>
+      </div>
     </nav>
     <!-- ===== END NAVBAR ===== -->
 
     <!-- ===== BLOG PAGE CONTENT ===== -->
-    <header class="w-full bg-white pt-12 px-6 md:px-16 max-w-[1440px] mx-auto">
+<header class="w-full bg-white pt-12 px-6 md:px-16 max-w-[1440px] mx-auto">
   <h1 class="text-3xl sm:text-4xl lg:text-[42px] font-bold tracking-tight text-black leading-tight max-w-4xl">
     Prustaz Blog
   </h1>
@@ -1637,5 +1639,32 @@
         });
       })();
     </script>
+
+    <script>
+  (function () {
+    document.querySelectorAll(".dr-nav-item").forEach((item) => {
+      const panel = item.querySelector(".dr-megamenu-panel");
+      if (!panel) return;
+
+      let timer;
+
+      const show = () => {
+        clearTimeout(timer);
+        panel.style.cssText = "opacity:1;visibility:visible;pointer-events:auto;transform:translateY(0)";
+      };
+
+      const hide = () => {
+        timer = setTimeout(() => {
+          panel.style.cssText = "opacity:0;visibility:hidden;pointer-events:none;transform:translateY(0)";
+        }, 150);
+      };
+
+      item.addEventListener("mouseenter", show);
+      item.addEventListener("mouseleave", hide);
+      panel.addEventListener("mouseenter", show);
+      panel.addEventListener("mouseleave", hide);
+    });
+  })();
+</script>
   </body>
 </html>
